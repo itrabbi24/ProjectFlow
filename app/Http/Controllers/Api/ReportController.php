@@ -57,7 +57,7 @@ class ReportController extends Controller
     {
         Gate::authorize('view_reports');
 
-        $filters = $request->only(['start_date', 'end_date', 'project_id', 'client_id']);
+        $filters = $request->only(['start_date', 'end_date', 'project_id', 'client_id', 'category']);
         $report = $this->reportService->getIncomeReport($filters);
 
         return response()->json([
@@ -66,16 +66,4 @@ class ReportController extends Controller
         ]);
     }
 
-    public function purchaseSummary(Request $request): JsonResponse
-    {
-        Gate::authorize('view_reports');
-
-        $filters = $request->only(['start_date', 'end_date', 'project_id']);
-        $report = $this->reportService->getPurchaseSummaryReport($filters);
-
-        return response()->json([
-            'status' => 'success',
-            'data' => $report
-        ]);
-    }
 }

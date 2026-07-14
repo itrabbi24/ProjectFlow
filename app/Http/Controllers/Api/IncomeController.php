@@ -47,6 +47,10 @@ class IncomeController extends Controller
             $query->where('client_id', $request->input('client_id'));
         }
 
+        if ($request->filled('category')) {
+            $query->where('category', $request->input('category'));
+        }
+
         $incomes = $query->latest()->paginate(15);
 
         return response()->json([

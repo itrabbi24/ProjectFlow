@@ -122,7 +122,7 @@
 
         <h1 class="text-3xl font-extrabold text-white tracking-tight sm:text-4xl leading-tight">Simplify Project Financials</h1>
         <p class="mt-4 text-sm text-indigo-200 leading-relaxed">
-          Track income, approve expenses, log purchases, monitor budget utilization, and trace profit margins in real-time.
+          Track income, approve expenses, monitor budget utilization, and trace profit margins in real-time.
         </p>
 
         <!-- Light-mode card mockup -->

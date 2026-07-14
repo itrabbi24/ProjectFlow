@@ -36,7 +36,7 @@ class CategoryController extends Controller
 
         $validated = $request->validate([
             'name' => 'required|string|max:100',
-            'type' => 'required|in:expense,purchase',
+            'type' => 'required|in:income,expense',
             'status' => 'in:active,inactive',
         ]);
 
@@ -57,7 +57,7 @@ class CategoryController extends Controller
 
         $validated = $request->validate([
             'name' => 'required|string|max:100',
-            'type' => 'required|in:expense,purchase',
+            'type' => 'required|in:income,expense',
             'status' => 'in:active,inactive',
         ]);
 

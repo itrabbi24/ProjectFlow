@@ -7,11 +7,9 @@ use App\Models\Role;
 use App\Models\User;
 use App\Models\Client;
 use App\Models\Project;
-use App\Models\Expense;
-use App\Models\Purchase;
 use App\Models\Income;
+use App\Models\Expense;
 use App\Models\Setting;
-use App\Models\ActivityLog;
 use App\Models\Category;
 use Illuminate\Support\Facades\Hash;
 use Carbon\Carbon;
@@ -19,28 +17,37 @@ use Carbon\Carbon;
 class DatabaseSeeder extends Seeder
 {
     /**
-     * Seed the application's database.
+     * Seed the application's database with essentials only:
+     * roles & permissions, default users, categories, and settings.
      */
     public function run(): void
     {
-        // 1. Run Roles and Permissions Seeder
+        // 1. Roles and Permissions
         $this->call(RolesAndPermissionsSeeder::class);
 
-        // 1b. Default Expense/Purchase Categories
-        $defaultCategoryNames = [
+        // 2. Default Income Categories
+        $incomeCategories = [
+            'Advance Payment', 'Milestone Payment', 'Final Payment',
+            'Maintenance Fee', 'Consultancy Fee', 'Other Income'
+        ];
+        foreach ($incomeCategories as $name) {
+            Category::create(['name' => $name, 'type' => 'income', 'status' => 'active']);
+        }
+
+        // 3. Default Expense Categories
+        $expenseCategories = [
             'Material', 'Labour', 'Transport', 'Food', 'Fuel',
             'Accommodation', 'Electricity', 'Machine Rent',
             'Marketing', 'Miscellaneous', 'Admin Expense'
         ];
-        foreach ($defaultCategoryNames as $name) {
+        foreach ($expenseCategories as $name) {
             Category::create(['name' => $name, 'type' => 'expense', 'status' => 'active']);
-            Category::create(['name' => $name, 'type' => 'purchase', 'status' => 'active']);
         }
 
+        // 4. Default Users
         $adminRole = Role::where('slug', 'administrator')->first();
         $pmRole = Role::where('slug', 'project_manager')->first();
 
-        // 2. Create Users
         $admin = User::create([
             'name' => 'System Administrator',
             'username' => 'admin',
@@ -48,57 +55,43 @@ class DatabaseSeeder extends Seeder
             'password' => Hash::make('password'),
             'role_id' => $adminRole->id,
             'status' => 'active',
-            'last_login_at' => Carbon::now()->subHours(2),
         ]);
 
         $pm = User::create([
-            'name' => 'John Manager',
-            'username' => 'john',
-            'email' => 'john@projectflow.com',
+            'name' => 'Project Manager',
+            'username' => 'manager',
+            'email' => 'manager@projectflow.com',
             'password' => Hash::make('password'),
             'role_id' => $pmRole->id,
             'status' => 'active',
-            'last_login_at' => Carbon::now()->subMinutes(15),
         ]);
 
-        $inactiveUser = User::create([
-            'name' => 'Sarah Employee',
-            'username' => 'sarah',
-            'email' => 'sarah@projectflow.com',
-            'password' => Hash::make('password'),
-            'role_id' => $pmRole->id,
-            'status' => 'inactive',
-        ]);
-
-        // 3. Create Clients
+        // 5. Demo Clients
         $client1 = Client::create([
             'name' => 'Acme Corporation',
             'email' => 'contact@acme.com',
-            'phone' => '+1 (555) 123-4567',
+            'phone' => '+880 1711-000001',
             'company' => 'Acme Corp Inc.',
-            'address' => '123 Industrial Way, Suite A, Silicon Valley, CA',
-            'remarks' => 'Enterprise client since 2024. Prefers bank transfer.',
+            'address' => 'Gulshan-2, Dhaka',
         ]);
 
         $client2 = Client::create([
             'name' => 'Stark Industries',
-            'email' => 'pepper@stark.com',
-            'phone' => '+1 (555) 999-8888',
+            'email' => 'info@stark.com',
+            'phone' => '+880 1711-000002',
             'company' => 'Stark Industries LLC',
-            'address' => '10880 Malibu Point, Malibu, CA',
-            'remarks' => 'High-priority tech client. Fast approval workflow.',
+            'address' => 'Banani, Dhaka',
         ]);
 
         $client3 = Client::create([
             'name' => 'Wayne Enterprises',
-            'email' => 'lucius@wayne.com',
-            'phone' => '+1 (555) 555-0199',
+            'email' => 'hello@wayne.com',
+            'phone' => '+880 1711-000003',
             'company' => 'Wayne Enterprises Ltd.',
-            'address' => 'Wayne Tower, Gotham City, NY',
-            'remarks' => 'Consistent recurring projects.',
+            'address' => 'Agrabad, Chattogram',
         ]);
 
-        // 4. Create Projects
+        // 6. Demo Projects
         $proj1 = Project::create([
             'code' => 'PRJ-2026-0001',
             'name' => 'Alpha Mobile Application',
@@ -110,11 +103,9 @@ class DatabaseSeeder extends Seeder
             'priority' => 'high',
             'budget' => 125000.00,
             'estimated_profit' => 45000.00,
-            'description' => 'A cross-platform React Native mobile application for Acme\'s logistics department tracking drivers and shipments in real-time.',
+            'description' => 'Cross-platform mobile application for logistics tracking.',
             'color_label' => 'indigo',
-            'tags' => ['Mobile', 'React Native', 'AWS', 'API'],
             'progress' => 45,
-            'notes' => 'Milestone 2 completed. Milestone 3 API integrations are underway.',
         ]);
 
         $proj2 = Project::create([
@@ -128,16 +119,14 @@ class DatabaseSeeder extends Seeder
             'priority' => 'medium',
             'budget' => 60000.00,
             'estimated_profit' => 20000.00,
-            'description' => 'A self-service portal for Stark Industries customers, powered by Vue 3 and Node.js backend. Integrating ticketing, live chat, and knowledge base.',
+            'description' => 'Self-service customer portal with ticketing and live chat.',
             'color_label' => 'emerald',
-            'tags' => ['Web Portal', 'Vue 3', 'Tailwind', 'Helpdesk'],
             'progress' => 15,
-            'notes' => 'Figma designs approved by client. Setting up workspace.',
         ]);
 
         $proj3 = Project::create([
-            'code' => 'PRJ-2025-0003',
-            'name' => 'Omega Legacy ERP Migration',
+            'code' => 'PRJ-2026-0003',
+            'name' => 'Omega ERP Migration',
             'client_id' => $client3->id,
             'manager_id' => $admin->id,
             'start_date' => Carbon::now()->subMonths(6)->format('Y-m-d'),
@@ -146,48 +135,73 @@ class DatabaseSeeder extends Seeder
             'priority' => 'high',
             'budget' => 240000.00,
             'estimated_profit' => 85000.00,
-            'description' => 'Comprehensive data migration of Wayne Enterprises\' legacy COBOL ERP system to modern Laravel/MySQL instances with optimized indexing.',
+            'description' => 'Legacy ERP data migration to a modern Laravel/MySQL stack.',
             'color_label' => 'amber',
-            'tags' => ['ERP', 'Migration', 'Database', 'Security'],
             'progress' => 100,
-            'notes' => 'Successfully signed off. Client team successfully trained on Laravel DB schemas.',
         ]);
 
-        // 5. Create Purchases (Supplier invoices related to projects)
-        Purchase::create([
-            'purchase_date' => Carbon::now()->subMonths(1)->format('Y-m-d'),
-            'supplier_name' => 'AWS Web Services',
-            'invoice_no' => 'AWS-7890-2026',
-            'category' => 'Electricity', // mapped to electricity/hosting
-            'amount' => 1500.00,
-            'payment_method' => 'Credit Card',
+        // 7. Demo Incomes (client payments with categories)
+        Income::create([
+            'income_date' => Carbon::now()->subMonths(2)->format('Y-m-d'),
+            'client_id' => $client1->id,
             'project_id' => $proj1->id,
-            'remarks' => 'Cloud infrastructure hosting for dev/staging environments.',
-        ]);
-
-        Purchase::create([
-            'purchase_date' => Carbon::now()->subDays(20)->format('Y-m-d'),
-            'supplier_name' => 'ThemeForest Market',
-            'invoice_no' => 'TF-55122-VUE',
-            'category' => 'Marketing',
-            'amount' => 350.00,
-            'payment_method' => 'PayPal',
-            'project_id' => $proj2->id,
-            'remarks' => 'Dashboard UI kit and component layouts.',
-        ]);
-
-        Purchase::create([
-            'purchase_date' => Carbon::now()->subMonths(4)->format('Y-m-d'),
-            'supplier_name' => 'Oracle Database Corp',
-            'invoice_no' => 'ORCL-MIG-001',
-            'category' => 'Machine Rent',
-            'amount' => 15000.00,
+            'invoice_number' => 'INV-2026-001',
+            'category' => 'Advance Payment',
+            'amount' => 35000.00,
             'payment_method' => 'Bank Transfer',
-            'project_id' => $proj3->id,
-            'remarks' => 'Temporary enterprise migration server licenses.',
+            'reference_number' => 'REF-8812903',
+            'remarks' => 'First 25% advance milestone payment.',
         ]);
 
-        // 6. Create Expenses (Internal operational costs paid by staff)
+        Income::create([
+            'income_date' => Carbon::now()->subDays(2)->format('Y-m-d'),
+            'client_id' => $client1->id,
+            'project_id' => $proj1->id,
+            'invoice_number' => 'INV-2026-004',
+            'category' => 'Milestone Payment',
+            'amount' => 35000.00,
+            'payment_method' => 'Bank Transfer',
+            'reference_number' => 'REF-9921389',
+            'remarks' => 'Second milestone (design & mockup approval).',
+        ]);
+
+        Income::create([
+            'income_date' => Carbon::now()->subDays(8)->format('Y-m-d'),
+            'client_id' => $client2->id,
+            'project_id' => $proj2->id,
+            'invoice_number' => 'INV-2026-002',
+            'category' => 'Advance Payment',
+            'amount' => 15000.00,
+            'payment_method' => 'Mobile Banking',
+            'reference_number' => 'REF-1192803',
+            'remarks' => 'Kick-off advance deposit (25%).',
+        ]);
+
+        Income::create([
+            'income_date' => Carbon::now()->subMonths(5)->format('Y-m-d'),
+            'client_id' => $client3->id,
+            'project_id' => $proj3->id,
+            'invoice_number' => 'INV-2025-098',
+            'category' => 'Advance Payment',
+            'amount' => 120000.00,
+            'payment_method' => 'Bank Transfer',
+            'reference_number' => 'REF-7718290',
+            'remarks' => '50% advance project payment.',
+        ]);
+
+        Income::create([
+            'income_date' => Carbon::now()->subDays(5)->format('Y-m-d'),
+            'client_id' => $client3->id,
+            'project_id' => $proj3->id,
+            'invoice_number' => 'INV-2026-003',
+            'category' => 'Final Payment',
+            'amount' => 120000.00,
+            'payment_method' => 'Bank Transfer',
+            'reference_number' => 'REF-7729903',
+            'remarks' => 'Final 50% project delivery sign-off payment.',
+        ]);
+
+        // 8. Demo Expenses
         Expense::create([
             'expense_date' => Carbon::now()->subDays(5)->format('Y-m-d'),
             'category' => 'Labour',
@@ -202,7 +216,7 @@ class DatabaseSeeder extends Seeder
         Expense::create([
             'expense_date' => Carbon::now()->subDays(12)->format('Y-m-d'),
             'category' => 'Food',
-            'amount' => 240.00,
+            'amount' => 2400.00,
             'project_id' => $proj2->id,
             'paid_by' => $pm->id,
             'payment_method' => 'Cash',
@@ -213,11 +227,11 @@ class DatabaseSeeder extends Seeder
         Expense::create([
             'expense_date' => Carbon::now()->subMonths(3)->format('Y-m-d'),
             'category' => 'Transport',
-            'amount' => 1200.00,
+            'amount' => 12000.00,
             'project_id' => $proj3->id,
             'paid_by' => $admin->id,
             'payment_method' => 'Bank Transfer',
-            'description' => 'Flights and transport for onsite data assessment in Gotham.',
+            'description' => 'Transport for onsite data assessment.',
             'status' => 'approved',
         ]);
 
@@ -232,151 +246,25 @@ class DatabaseSeeder extends Seeder
             'status' => 'pending',
         ]);
 
-        // 7. Create Incomes (Client payments / billings)
-        Income::create([
-            'income_date' => Carbon::now()->subMonths(2)->format('Y-m-d'),
-            'client_id' => $client1->id,
-            'project_id' => $proj1->id,
-            'invoice_number' => 'INV-2026-001',
-            'amount' => 35000.00,
-            'payment_method' => 'Bank Transfer',
-            'reference_number' => 'REF-8812903',
-            'remarks' => 'First 25% advance milestone payment.',
-        ]);
-
-        Income::create([
-            'income_date' => Carbon::now()->subDays(2)->format('Y-m-d'),
-            'client_id' => $client1->id,
-            'project_id' => $proj1->id,
-            'invoice_number' => 'INV-2026-004',
-            'amount' => 35000.00,
-            'payment_method' => 'Bank Transfer',
-            'reference_number' => 'REF-9921389',
-            'remarks' => 'Second milestone (design & mockup approval).',
-        ]);
-
-        Income::create([
-            'income_date' => Carbon::now()->subDays(8)->format('Y-m-d'),
-            'client_id' => $client2->id,
-            'project_id' => $proj2->id,
-            'invoice_number' => 'INV-2026-002',
-            'amount' => 15000.00,
-            'payment_method' => 'Bank Transfer',
-            'reference_number' => 'REF-1192803',
-            'remarks' => 'Kick-off advance deposit (25%).',
-        ]);
-
-        Income::create([
-            'income_date' => Carbon::now()->subMonths(5)->format('Y-m-d'),
-            'client_id' => $client3->id,
-            'project_id' => $proj3->id,
-            'invoice_number' => 'INV-2025-098',
-            'amount' => 120000.00,
-            'payment_method' => 'Bank Transfer',
-            'reference_number' => 'REF-7718290',
-            'remarks' => '50% advance project payment.',
-        ]);
-
-        Income::create([
-            'income_date' => Carbon::now()->subDays(5)->format('Y-m-d'),
-            'client_id' => $client3->id,
-            'project_id' => $proj3->id,
-            'invoice_number' => 'INV-2026-003',
-            'amount' => 120000.00,
-            'payment_method' => 'Bank Transfer',
-            'reference_number' => 'REF-7729903',
-            'remarks' => 'Final 50% project delivery sign-off payment.',
-        ]);
-
-        // 8. Create Default Settings
+        // 9. Default Settings
         $defaultSettings = [
-            'company_name' => 'ProjectFlow Financials Inc.',
-            'company_email' => 'finance@projectflow.com',
-            'company_phone' => '+1 (555) 888-0000',
-            'company_address' => '456 Flow Boulevard, Suite 500, New York, NY',
-            'currency' => 'USD',
-            'currency_symbol' => '$',
-            'timezone' => 'UTC',
+            'company_name' => 'ProjectFlow',
+            'company_email' => 'info@projectflow.com',
+            'company_phone' => '',
+            'company_address' => '',
+            'currency' => 'BDT',
+            'currency_symbol' => '৳',
+            'timezone' => 'Asia/Dhaka',
             'date_format' => 'Y-m-d',
             'theme' => 'light',
-            'smtp_host' => 'smtp.mailtrap.io',
-            'smtp_port' => '2525',
-            'smtp_username' => 'pf-smtp-sandbox',
-            'smtp_password' => 'pf-pass-12345',
+            'smtp_host' => '',
+            'smtp_port' => '',
+            'smtp_username' => '',
+            'smtp_password' => '',
         ];
 
         foreach ($defaultSettings as $key => $val) {
             Setting::create(['key' => $key, 'value' => $val]);
         }
-
-        // 9. Create Activity Logs
-        ActivityLog::create([
-            'user_id' => $admin->id,
-            'action' => 'login',
-            'description' => 'System Administrator logged in',
-            'ip_address' => '127.0.0.1',
-            'user_agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/120.0.0.0',
-        ]);
-
-        ActivityLog::create([
-            'user_id' => $pm->id,
-            'action' => 'login',
-            'description' => 'John Manager logged in',
-            'ip_address' => '127.0.0.1',
-            'user_agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/120.0.0.0',
-        ]);
-
-        ActivityLog::create([
-            'user_id' => $pm->id,
-            'action' => 'created',
-            'loggable_type' => Project::class,
-            'loggable_id' => $proj1->id,
-            'description' => 'Project "Alpha Mobile Application" (PRJ-2026-0001) created by John Manager',
-            'properties' => ['budget' => 125000.00],
-            'ip_address' => '127.0.0.1',
-            'user_agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/120.0.0.0',
-        ]);
-
-        ActivityLog::create([
-            'user_id' => $pm->id,
-            'action' => 'created',
-            'loggable_type' => Project::class,
-            'loggable_id' => $proj2->id,
-            'description' => 'Project "Beta Customer Support Portal" (PRJ-2026-0002) created by John Manager',
-            'properties' => ['budget' => 60000.00],
-            'ip_address' => '127.0.0.1',
-            'user_agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/120.0.0.0',
-        ]);
-
-        ActivityLog::create([
-            'user_id' => $pm->id,
-            'action' => 'updated',
-            'loggable_type' => Project::class,
-            'loggable_id' => $proj1->id,
-            'description' => 'Project "Alpha Mobile Application" status updated to running',
-            'properties' => ['status' => 'running', 'progress' => 45],
-            'ip_address' => '127.0.0.1',
-            'user_agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/120.0.0.0',
-        ]);
-
-        ActivityLog::create([
-            'user_id' => $pm->id,
-            'action' => 'created',
-            'loggable_type' => Expense::class,
-            'loggable_id' => 1,
-            'description' => 'Expense of $8,500.00 (Labour) added to Alpha Mobile Application',
-            'ip_address' => '127.0.0.1',
-            'user_agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/120.0.0.0',
-        ]);
-
-        ActivityLog::create([
-            'user_id' => $pm->id,
-            'action' => 'created',
-            'loggable_type' => Income::class,
-            'loggable_id' => 1,
-            'description' => 'Income of $35,000.00 added to Alpha Mobile Application',
-            'ip_address' => '127.0.0.1',
-            'user_agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/120.0.0.0',
-        ]);
     }
 }

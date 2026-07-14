@@ -54,21 +54,6 @@ return new class extends Migration
             $table->timestamps();
         });
 
-        Schema::create('purchases', function (Blueprint $table) {
-            $table->id();
-            $table->date('purchase_date');
-            $table->string('supplier_name');
-            $table->string('invoice_no');
-            $table->string('category'); // e.g., Material, Labour, Transport, Food, Fuel, Accommodation, Electricity, Machine Rent, Marketing, Miscellaneous, Admin Expense
-            $table->decimal('amount', 15, 2);
-            $table->string('payment_method'); // Cash, Bank Transfer, Card, Mobile Banking, etc.
-            $table->foreignId('project_id')->constrained('projects')->onDelete('cascade');
-            $table->text('remarks')->nullable();
-            $table->string('attachment_path')->nullable();
-            $table->timestamps();
-            $table->softDeletes();
-        });
-
         Schema::create('expenses', function (Blueprint $table) {
             $table->id();
             $table->date('expense_date');
@@ -90,6 +75,7 @@ return new class extends Migration
             $table->foreignId('client_id')->constrained('clients')->onDelete('cascade');
             $table->foreignId('project_id')->constrained('projects')->onDelete('cascade');
             $table->string('invoice_number');
+            $table->string('category');
             $table->decimal('amount', 15, 2);
             $table->string('payment_method');
             $table->string('reference_number')->nullable();
@@ -129,7 +115,6 @@ return new class extends Migration
         Schema::dropIfExists('activity_logs');
         Schema::dropIfExists('incomes');
         Schema::dropIfExists('expenses');
-        Schema::dropIfExists('purchases');
         Schema::dropIfExists('project_files');
         Schema::dropIfExists('projects');
         Schema::dropIfExists('clients');

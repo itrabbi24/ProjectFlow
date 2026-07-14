@@ -21,6 +21,7 @@ class IncomeRequest extends FormRequest
             'client_id' => $required . '|exists:clients,id',
             'project_id' => $required . '|exists:projects,id',
             'invoice_number' => $required . '|string|max:100',
+            'category' => $required . '|string|max:100',
             'amount' => $required . '|numeric|min:0.01',
             'payment_method' => $required . '|string|max:100',
             'reference_number' => 'nullable|string|max:100',

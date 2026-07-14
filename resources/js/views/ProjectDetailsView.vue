@@ -57,9 +57,7 @@
         <h2 class="text-xl font-bold text-slate-800 mt-1">{{ sym }}{{ financials.total_spent.toLocaleString() }}</h2>
         <div class="flex items-center space-x-2 mt-3.5 text-[10px] text-slate-400">
           <span class="font-medium text-rose-500">{{ sym }}{{ financials.total_expenses.toLocaleString() }}</span>
-          <span>expenses</span>
-          <span class="font-medium text-slate-600">{{ sym }}{{ financials.total_purchases.toLocaleString() }}</span>
-          <span>purchases</span>
+          <span>approved expenses</span>
         </div>
       </div>
 
@@ -189,17 +187,7 @@
                   <td class="py-3 text-right font-bold text-slate-700">-{{ sym }}{{ parseFloat(exp.amount).toLocaleString() }}</td>
                 </tr>
 
-                <!-- Purchases -->
-                <tr v-for="pur in project.purchases" :key="'pur_'+pur.id" class="hover:bg-slate-50/50">
-                  <td class="py-3 text-slate-500">{{ formatDate(pur.purchase_date) }}</td>
-                  <td class="py-3"><span class="px-2 py-0.5 rounded text-[10px] bg-slate-100 text-slate-700 border border-slate-200">Purchase</span></td>
-                  <td class="py-3 font-semibold text-slate-800">{{ pur.category }} • Supplier: {{ pur.supplier_name }}</td>
-                  <td class="py-3 text-slate-500">{{ pur.payment_method }}</td>
-                  <td class="py-3 font-mono text-slate-400">Invoice: {{ pur.invoice_no }}</td>
-                  <td class="py-3 text-right font-bold text-slate-700">-{{ sym }}{{ parseFloat(pur.amount).toLocaleString() }}</td>
-                </tr>
-
-                <tr v-if="!(project.incomes?.length || project.expenses?.length || project.purchases?.length)">
+                <tr v-if="!(project.incomes?.length || project.expenses?.length)">
                   <td colspan="6" class="py-8 text-center text-slate-400">No ledger entries logged for this project</td>
                 </tr>
               </tbody>
@@ -325,7 +313,6 @@ const activeTab = ref('overview');
 const project = ref({});
 const financials = ref({
   budget: 0,
-  total_purchases: 0,
   total_expenses: 0,
   total_spent: 0,
   remaining_budget: 0,
@@ -387,15 +374,13 @@ function drawBudgetChart() {
   budgetChartInstance = new Chart(ctx, {
     type: 'doughnut',
     data: {
-      labels: ['Purchases', 'Approved Expenses', 'Remaining Budget'],
+      labels: ['Approved Expenses', 'Remaining Budget'],
       datasets: [{
         data: [
-          financials.value.total_purchases,
           financials.value.total_expenses,
           Math.max(0, financials.value.remaining_budget)
         ],
         backgroundColor: [
-          '#64748b', // purchases (grey slate)
           '#f43f5e', // expenses (rose)
           '#10b981'  // remaining (emerald)
         ],

@@ -26,7 +26,7 @@
         <button
           v-for="report in reportTypes"
           :key="report.key"
-          @click="activeMode = report.key; fetchReport();"
+          @click="switchMode(report.key)"
           :class="[
             'flex items-center space-x-1.5 px-3 py-1.5 rounded-lg text-[11px] font-semibold transition cursor-pointer border',
             activeMode === report.key
@@ -68,7 +68,7 @@
         </div>
 
         <!-- Client Filter -->
-        <div v-if="!['expense_category','purchase_summary','payment_method'].includes(activeMode)">
+        <div v-if="!['expense_category','payment_method'].includes(activeMode)">
           <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Client</label>
           <select v-model="filters.client_id" @change="fetchReport"
             class="w-full px-2.5 py-1.5 border border-slate-200 rounded-lg text-xs bg-white text-slate-800 focus:outline-none">
@@ -96,7 +96,17 @@
           <select v-model="filters.category" @change="fetchReport"
             class="w-full px-2.5 py-1.5 border border-slate-200 rounded-lg text-xs bg-white text-slate-800 focus:outline-none">
             <option value="">All Categories</option>
-            <option v-for="cat in categories" :key="cat" :value="cat">{{ cat }}</option>
+            <option v-for="cat in expenseCategories" :key="cat" :value="cat">{{ cat }}</option>
+          </select>
+        </div>
+
+        <!-- Income Category Filter -->
+        <div v-if="activeMode === 'income'">
+          <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Category</label>
+          <select v-model="filters.category" @change="fetchReport"
+            class="w-full px-2.5 py-1.5 border border-slate-200 rounded-lg text-xs bg-white text-slate-800 focus:outline-none">
+            <option value="">All Categories</option>
+            <option v-for="cat in incomeCategories" :key="cat" :value="cat">{{ cat }}</option>
           </select>
         </div>
       </div>
@@ -201,10 +211,9 @@
           <thead>
             <tr class="bg-slate-50 border-b border-slate-100 text-slate-400 font-bold uppercase tracking-wider text-[10px]">
               <th class="px-6 py-3">Date</th>
-              <th class="px-6 py-3">Type</th>
               <th class="px-6 py-3">Category</th>
               <th class="px-6 py-3">Project</th>
-              <th class="px-6 py-3">Paid By / Supplier</th>
+              <th class="px-6 py-3">Paid By</th>
               <th class="px-6 py-3">Method</th>
               <th class="px-6 py-3">Description</th>
               <th class="px-6 py-3 text-right">Amount</th>
@@ -213,11 +222,6 @@
           <tbody class="divide-y divide-slate-50">
             <tr v-for="(item, idx) in reportData" :key="idx" class="hover:bg-slate-50/50 transition">
               <td class="px-6 py-3.5 text-slate-500">{{ formatDate(item.date) }}</td>
-              <td class="px-6 py-3.5">
-                <span :class="['px-2 py-0.5 rounded-full text-[10px] font-semibold border', item.type === 'Expense' ? 'bg-rose-50 text-rose-600 border-rose-100' : 'bg-slate-50 text-slate-600 border-slate-200']">
-                  {{ item.type }}
-                </span>
-              </td>
               <td class="px-6 py-3.5 font-semibold text-slate-800">{{ item.category }}</td>
               <td class="px-6 py-3.5 text-slate-600">{{ item.project }}</td>
               <td class="px-6 py-3.5 text-slate-500">{{ item.party }}</td>
@@ -226,7 +230,7 @@
               <td class="px-6 py-3.5 text-right font-bold text-rose-500">-{{ sym }}{{ Number(item.amount).toLocaleString() }}</td>
             </tr>
             <tr v-if="reportData.length === 0">
-              <td colspan="8" class="px-6 py-12 text-center text-slate-400">No expense records found.</td>
+              <td colspan="7" class="px-6 py-12 text-center text-slate-400">No expense records found.</td>
             </tr>
           </tbody>
         </table>
@@ -237,11 +241,11 @@
             <tr class="bg-slate-50 border-b border-slate-100 text-slate-400 font-bold uppercase tracking-wider text-[10px]">
               <th class="px-6 py-3">Date</th>
               <th class="px-6 py-3">Invoice #</th>
+              <th class="px-6 py-3">Category</th>
               <th class="px-6 py-3">Client</th>
               <th class="px-6 py-3">Project</th>
               <th class="px-6 py-3">Method</th>
               <th class="px-6 py-3">Reference</th>
-              <th class="px-6 py-3">Remarks</th>
               <th class="px-6 py-3 text-right">Amount</th>
             </tr>
           </thead>
@@ -249,11 +253,11 @@
             <tr v-for="(item, idx) in reportData" :key="idx" class="hover:bg-slate-50/50 transition">
               <td class="px-6 py-3.5 text-slate-500">{{ formatDate(item.date) }}</td>
               <td class="px-6 py-3.5 font-mono text-slate-700">{{ item.invoice_number }}</td>
+              <td class="px-6 py-3.5"><span class="px-2 py-0.5 rounded text-[10px] bg-emerald-50 text-emerald-600 border border-emerald-100">{{ item.category || '—' }}</span></td>
               <td class="px-6 py-3.5 font-bold text-slate-800">{{ item.client }}</td>
               <td class="px-6 py-3.5 text-slate-600">{{ item.project }}</td>
               <td class="px-6 py-3.5 text-slate-500">{{ item.payment_method }}</td>
               <td class="px-6 py-3.5 text-slate-400 font-mono">{{ item.reference || '—' }}</td>
-              <td class="px-6 py-3.5 text-slate-400 max-w-xs truncate">{{ item.remarks || '—' }}</td>
               <td class="px-6 py-3.5 text-right font-bold text-emerald-600">+{{ sym }}{{ Number(item.amount).toLocaleString() }}</td>
             </tr>
             <tr v-if="reportData.length === 0">
@@ -343,34 +347,7 @@
           </tbody>
         </table>
 
-        <!-- ⑥ Purchase Summary -->
-        <table v-else-if="activeMode === 'purchase_summary'" class="w-full text-left text-xs border-collapse">
-          <thead>
-            <tr class="bg-slate-50 border-b border-slate-100 text-slate-400 font-bold uppercase tracking-wider text-[10px]">
-              <th class="px-6 py-3">Date</th>
-              <th class="px-6 py-3">Supplier</th>
-              <th class="px-6 py-3">Item</th>
-              <th class="px-6 py-3">Project</th>
-              <th class="px-6 py-3">Method</th>
-              <th class="px-6 py-3 text-right">Total</th>
-            </tr>
-          </thead>
-          <tbody class="divide-y divide-slate-50">
-            <tr v-for="(item, idx) in reportData" :key="idx" class="hover:bg-slate-50/50 transition">
-              <td class="px-6 py-3.5 text-slate-500">{{ formatDate(item.date) }}</td>
-              <td class="px-6 py-3.5 font-bold text-slate-800">{{ item.supplier }}</td>
-              <td class="px-6 py-3.5 text-slate-700">{{ item.item }}</td>
-              <td class="px-6 py-3.5 text-slate-600">{{ item.project }}</td>
-              <td class="px-6 py-3.5 text-slate-500">{{ item.payment_method }}</td>
-              <td class="px-6 py-3.5 text-right font-bold text-slate-800">{{ sym }}{{ Number(item.amount).toLocaleString() }}</td>
-            </tr>
-            <tr v-if="reportData.length === 0">
-              <td colspan="6" class="px-6 py-12 text-center text-slate-400">No purchase records found.</td>
-            </tr>
-          </tbody>
-        </table>
-
-        <!-- ⑦ Client Revenue -->
+        <!-- ⑥ Client Revenue -->
         <table v-else-if="activeMode === 'client_revenue'" class="w-full text-left text-xs border-collapse">
           <thead>
             <tr class="bg-slate-50 border-b border-slate-100 text-slate-400 font-bold uppercase tracking-wider text-[10px]">
@@ -471,7 +448,6 @@
               <th class="px-6 py-3">Month</th>
               <th class="px-6 py-3 text-right">Income</th>
               <th class="px-6 py-3 text-right">Expenses</th>
-              <th class="px-6 py-3 text-right">Purchases</th>
               <th class="px-6 py-3 text-right">Net Profit</th>
               <th class="px-6 py-3">Trend</th>
             </tr>
@@ -481,7 +457,6 @@
               <td class="px-6 py-3.5 font-bold text-slate-800">{{ item.month }}</td>
               <td class="px-6 py-3.5 text-right font-semibold text-emerald-600">{{ sym }}{{ Number(item.income).toLocaleString() }}</td>
               <td class="px-6 py-3.5 text-right font-semibold text-rose-500">{{ sym }}{{ Number(item.expenses).toLocaleString() }}</td>
-              <td class="px-6 py-3.5 text-right font-semibold text-amber-600">{{ sym }}{{ Number(item.purchases || 0).toLocaleString() }}</td>
               <td :class="['px-6 py-3.5 text-right font-bold', Number(item.profit) >= 0 ? 'text-indigo-600' : 'text-rose-500']">
                 {{ sym }}{{ Number(item.profit).toLocaleString() }}
               </td>
@@ -493,7 +468,7 @@
               </td>
             </tr>
             <tr v-if="reportData.length === 0">
-              <td colspan="6" class="px-6 py-12 text-center text-slate-400">No monthly trend data available.</td>
+              <td colspan="5" class="px-6 py-12 text-center text-slate-400">No monthly trend data available.</td>
             </tr>
           </tbody>
         </table>
@@ -521,7 +496,7 @@ import { useSettingStore } from '@/stores/settings';
 import {
   Printer, Download,
   TrendingUp, Receipt, Wallet, PieChart,
-  ShoppingBag, Users, CreditCard, AlertTriangle,
+  Users, CreditCard, AlertTriangle,
   BarChart3, Calendar, Landmark, Banknote
 } from 'lucide-vue-next';
 import axios from 'axios';
@@ -549,7 +524,6 @@ const reportTypes = [
   { key: 'income',            label: 'Income Collections',       icon: Wallet },
   { key: 'budget_utilization',label: 'Budget Utilization',       icon: PieChart },
   { key: 'expense_category',  label: 'Expense by Category',      icon: BarChart3 },
-  { key: 'purchase_summary',  label: 'Purchase Summary',         icon: ShoppingBag },
   { key: 'client_revenue',    label: 'Client Revenue',           icon: Users },
   { key: 'payment_method',    label: 'Payment Method Analysis',  icon: CreditCard },
   { key: 'top_expenses',      label: 'Top Expenses',             icon: AlertTriangle },
@@ -558,11 +532,23 @@ const reportTypes = [
 
 const currentReport = computed(() => reportTypes.find(r => r.key === activeMode.value));
 
-const categories = [
-  'Material', 'Labour', 'Transport', 'Food', 'Fuel',
-  'Accommodation', 'Electricity', 'Machine Rent',
-  'Marketing', 'Miscellaneous', 'Admin Expense'
-];
+function switchMode(key) {
+  activeMode.value = key;
+  filters.category = '';
+  fetchReport();
+}
+
+const expenseCategories = ref([]);
+const incomeCategories = ref([]);
+
+async function fetchCategories() {
+  try {
+    const response = await axios.get('/categories?active_only=1');
+    const all = response.data.data || [];
+    expenseCategories.value = all.filter(c => c.type === 'expense').map(c => c.name);
+    incomeCategories.value = all.filter(c => c.type === 'income').map(c => c.name);
+  } catch (e) { console.error(e); }
+}
 
 const filters = reactive({
   start_date: '',
@@ -590,9 +576,6 @@ const summaryKPIs = computed(() => {
   }
   if (['profit', 'budget_utilization', 'client_revenue', 'monthly_trend'].includes(activeMode.value)) {
     kpis.push({ label: 'Net Profit', value: `${sym.value}${totals.profit.toLocaleString()}`, color: totals.profit >= 0 ? 'text-indigo-600' : 'text-rose-500' });
-  }
-  if (activeMode.value === 'purchase_summary') {
-    kpis.push({ label: 'Total Purchases', value: `${sym.value}${totals.spent.toLocaleString()}`, color: 'text-amber-600' });
   }
   return kpis;
 });
@@ -633,9 +616,7 @@ const endpointMap = {
   income:             '/reports/income',
   budget_utilization: '/reports/profit',  // reuse profit data, we reformat it
   expense_category:   '/reports/expense', // aggregate client-side
-  purchase_summary:   '/reports/purchase-summary',
   client_revenue:     '/reports/profit',  // aggregate by client client-side
-  payment_method:     '/reports/expense', // aggregate payment methods
   top_expenses:       '/reports/expense', // sort by amount desc
   monthly_trend:      '/reports/profit',  // aggregate monthly
 };
@@ -643,9 +624,22 @@ const endpointMap = {
 async function fetchReport() {
   loading.value = true;
   try {
-    const endpoint = endpointMap[activeMode.value] || '/reports/profit';
-    const response = await axios.get(endpoint + buildQuery());
-    let data = response.data.data;
+    let data;
+    if (activeMode.value === 'payment_method') {
+      // Merge both ledgers so income and expense methods are analysed together
+      const [expRes, incRes] = await Promise.all([
+        axios.get('/reports/expense' + buildQuery()),
+        axios.get('/reports/income' + buildQuery())
+      ]);
+      data = [
+        ...(expRes.data.data || []).map(i => ({ ...i, flow: 'expense' })),
+        ...(incRes.data.data || []).map(i => ({ ...i, flow: 'income' }))
+      ];
+    } else {
+      const endpoint = endpointMap[activeMode.value] || '/reports/profit';
+      const response = await axios.get(endpoint + buildQuery());
+      data = response.data.data;
+    }
 
     reportData.value = transformData(data);
     calculateTotals();
@@ -699,7 +693,7 @@ function transformData(raw) {
       (raw || []).forEach(item => {
         const m = item.payment_method || 'Unknown';
         if (!grouped[m]) grouped[m] = { method: m, income_count: 0, income_total: 0, expense_count: 0, expense_total: 0 };
-        if (item.type === 'Income') {
+        if (item.flow === 'income') {
           grouped[m].income_count++;
           grouped[m].income_total += parseFloat(item.amount || 0);
         } else {
@@ -718,7 +712,7 @@ function transformData(raw) {
       (raw || []).forEach(item => {
         // Use project start dates grouped by month (rough approximation using spent/income)
         const month = item.start_date ? item.start_date.substring(0, 7) : 'Unknown';
-        if (!grouped[month]) grouped[month] = { month, income: 0, expenses: 0, purchases: 0, profit: 0 };
+        if (!grouped[month]) grouped[month] = { month, income: 0, expenses: 0, profit: 0 };
         grouped[month].income   += parseFloat(item.income || 0);
         grouped[month].expenses += parseFloat(item.spent || 0);
         grouped[month].profit   += parseFloat(item.profit || 0);
@@ -747,8 +741,6 @@ function calculateTotals() {
     data.forEach(i => { totals.income += parseFloat(i.amount || 0); });
   } else if (activeMode.value === 'client_revenue') {
     data.forEach(i => { totals.income += parseFloat(i.income || 0); totals.spent += parseFloat(i.spent || 0); totals.profit += parseFloat(i.profit || 0); });
-  } else if (activeMode.value === 'purchase_summary') {
-    data.forEach(i => { totals.spent += parseFloat(i.amount || 0); });
   } else if (activeMode.value === 'monthly_trend') {
     data.forEach(i => { totals.income += parseFloat(i.income || 0); totals.spent += parseFloat(i.expenses || 0); totals.profit += parseFloat(i.profit || 0); });
   } else if (activeMode.value === 'payment_method') {
@@ -785,18 +777,13 @@ function exportCSV() {
       csv += `"${i.date}","${i.category}","${i.project}","${i.party}","${i.payment_method}","${i.description || ''}",${i.amount}\n`;
     });
   } else if (activeMode.value === 'income') {
-    csv = 'Date,Invoice,Client,Project,Method,Reference,Remarks,Amount\n';
+    csv = 'Date,Invoice,Category,Client,Project,Method,Reference,Remarks,Amount\n';
     reportData.value.forEach(i => {
-      csv += `"${i.date}","${i.invoice_number}","${i.client}","${i.project}","${i.payment_method}","${i.reference || ''}","${i.remarks || ''}",${i.amount}\n`;
+      csv += `"${i.date}","${i.invoice_number}","${i.category || ''}","${i.client}","${i.project}","${i.payment_method}","${i.reference || ''}","${i.remarks || ''}",${i.amount}\n`;
     });
   } else if (activeMode.value === 'expense_category') {
     csv = 'Category,Transactions,Total Amount,Share(%)\n';
     reportData.value.forEach(i => { csv += `"${i.category}",${i.count},${i.total},${i.percentage}\n`; });
-  } else if (activeMode.value === 'purchase_summary') {
-    csv = 'Date,Supplier,Item,Project,Method,Total\n';
-    reportData.value.forEach(i => {
-      csv += `"${i.date}","${i.supplier}","${i.item}","${i.project}","${i.payment_method}",${i.amount}\n`;
-    });
   } else if (activeMode.value === 'client_revenue') {
     csv = 'Client,Company,Projects,Income,Spent,Net Profit,Margin(%)\n';
     reportData.value.forEach(i => { csv += `"${i.client}","${i.company}",${i.project_count},${i.income},${i.spent},${i.profit},${i.margin}\n`; });
@@ -804,8 +791,8 @@ function exportCSV() {
     csv = 'Method,Income Txns,Income Amount,Expense Txns,Expense Amount,Net Flow\n';
     reportData.value.forEach(i => { csv += `"${i.method}",${i.income_count},${i.income_total},${i.expense_count},${i.expense_total},${i.net}\n`; });
   } else if (activeMode.value === 'monthly_trend') {
-    csv = 'Month,Income,Expenses,Purchases,Net Profit\n';
-    reportData.value.forEach(i => { csv += `"${i.month}",${i.income},${i.expenses},${i.purchases},${i.profit}\n`; });
+    csv = 'Month,Income,Expenses,Net Profit\n';
+    reportData.value.forEach(i => { csv += `"${i.month}",${i.income},${i.expenses},${i.profit}\n`; });
   }
 
   const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
@@ -822,6 +809,7 @@ function exportCSV() {
 onMounted(() => {
   fetchReport();
   fetchDropdowns();
+  fetchCategories();
 });
 </script>
 

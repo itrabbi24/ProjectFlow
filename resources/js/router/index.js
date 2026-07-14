@@ -41,10 +41,10 @@ const routes = [
                 meta: { permission: 'view_clients' }
             },
             {
-                path: 'purchases',
-                name: 'purchases',
-                component: () => import('@/views/PurchasesView.vue'),
-                meta: { permission: 'view_purchases' }
+                path: 'incomes',
+                name: 'incomes',
+                component: () => import('@/views/IncomesView.vue'),
+                meta: { permission: 'view_incomes' }
             },
             {
                 path: 'expenses',

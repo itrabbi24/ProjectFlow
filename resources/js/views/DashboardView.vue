@@ -102,7 +102,7 @@
       <!-- Income vs Expense Chart -->
       <div class="bg-white border border-slate-100 p-6 rounded-2xl shadow-sm lg:col-span-2">
         <div class="flex items-center justify-between mb-4">
-          <h3 class="text-sm font-bold text-slate-800">Cash Flow (Incomes vs Outflows)</h3>
+          <h3 class="text-sm font-bold text-slate-800">Cash Flow (Income vs Expense)</h3>
           <span class="text-[10px] text-slate-400">Current calendar year</span>
         </div>
         <div class="h-64 relative">
@@ -194,21 +194,20 @@
                 <div class="relative flex space-x-3">
                   <div>
                     <!-- Icon container -->
-                    <span 
+                    <span
                       :class="[
                         'h-8 w-8 rounded-lg flex items-center justify-center text-white ring-8 ring-white',
-                        tx.type === 'income' ? 'bg-emerald-500' : tx.type === 'expense' ? 'bg-rose-500' : 'bg-slate-600'
+                        tx.type === 'income' ? 'bg-emerald-500' : 'bg-rose-500'
                       ]"
                     >
                       <ArrowUpRight v-if="tx.type === 'income'" class="w-4 h-4" />
-                      <ArrowDownLeft v-else-if="tx.type === 'expense'" class="w-4 h-4" />
-                      <ShoppingBag v-else class="w-4 h-4" />
+                      <ArrowDownLeft v-else class="w-4 h-4" />
                     </span>
                   </div>
                   <div class="flex-1 min-w-0 pt-1.5 flex justify-between space-x-4">
                     <div>
                       <p class="text-xs text-slate-700 font-medium">
-                        {{ tx.type === 'income' ? 'Received billing payment' : tx.type === 'expense' ? 'Contractor expense paid' : 'Log vendor purchase' }}
+                        {{ tx.type === 'income' ? 'Received client payment' : 'Project expense paid' }}
                       </p>
                       <p class="text-[10px] text-slate-400 mt-0.5">Project: <span class="font-medium text-slate-500">{{ tx.project?.name }}</span></p>
                     </div>
@@ -246,7 +245,6 @@ import {
   DollarSign,
   Plus,
   ChevronUp,
-  ShoppingBag,
   Receipt
 } from 'lucide-vue-next';
 import axios from 'axios';
@@ -331,7 +329,7 @@ function drawCashFlowChart() {
           pointHoverRadius: 5
         },
         {
-          label: 'Outflows (Expenses + Purchases)',
+          label: 'Expenses',
           data: stats.value.charts.expense,
           borderColor: '#f43f5e', // rose
           backgroundColor: 'rgba(244, 63, 94, 0.05)',

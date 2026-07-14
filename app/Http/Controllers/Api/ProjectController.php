@@ -76,7 +76,7 @@ class ProjectController extends Controller
 
     public function show(int $id): JsonResponse
     {
-        $project = $this->projectRepo->findOrFail($id, ['client', 'manager', 'files.uploader', 'purchases', 'expenses.paidBy', 'incomes']);
+        $project = $this->projectRepo->findOrFail($id, ['client', 'manager', 'files.uploader', 'expenses.paidBy', 'incomes']);
         
         Gate::authorize('view', $project);
 

@@ -34,12 +34,6 @@ class RolesAndPermissionsSeeder extends Seeder
             ['name' => 'Edit Clients', 'slug' => 'edit_clients', 'category' => 'clients', 'description' => 'Can edit client information'],
             ['name' => 'Delete Clients', 'slug' => 'delete_clients', 'category' => 'clients', 'description' => 'Can delete clients'],
 
-            // Purchase Management
-            ['name' => 'View Purchases', 'slug' => 'view_purchases', 'category' => 'purchases', 'description' => 'Can view purchases list'],
-            ['name' => 'Create Purchases', 'slug' => 'create_purchases', 'category' => 'purchases', 'description' => 'Can add new purchases'],
-            ['name' => 'Edit Purchases', 'slug' => 'edit_purchases', 'category' => 'purchases', 'description' => 'Can edit purchase records'],
-            ['name' => 'Delete Purchases', 'slug' => 'delete_purchases', 'category' => 'purchases', 'description' => 'Can delete purchase records'],
-
             // Expense Management
             ['name' => 'View Expenses', 'slug' => 'view_expenses', 'category' => 'expenses', 'description' => 'Can view expenses list'],
             ['name' => 'Create Expenses', 'slug' => 'create_expenses', 'category' => 'expenses', 'description' => 'Can add new expenses'],
@@ -57,8 +51,8 @@ class RolesAndPermissionsSeeder extends Seeder
             ['name' => 'View Reports', 'slug' => 'view_reports', 'category' => 'reports', 'description' => 'Can view financial and system reports'],
 
             // Category Management
-            ['name' => 'View Categories', 'slug' => 'view_categories', 'category' => 'categories', 'description' => 'Can view expense/purchase categories'],
-            ['name' => 'Edit Categories', 'slug' => 'edit_categories', 'category' => 'categories', 'description' => 'Can add, edit, or delete expense/purchase categories'],
+            ['name' => 'View Categories', 'slug' => 'view_categories', 'category' => 'categories', 'description' => 'Can view income/expense categories'],
+            ['name' => 'Edit Categories', 'slug' => 'edit_categories', 'category' => 'categories', 'description' => 'Can add, edit, or delete income/expense categories'],
 
             // Settings
             ['name' => 'View Settings', 'slug' => 'view_settings', 'category' => 'settings', 'description' => 'Can view system settings'],
@@ -93,7 +87,6 @@ class RolesAndPermissionsSeeder extends Seeder
         $pmPermissionSlugs = [
             'view_projects', 'create_projects', 'edit_projects', 'delete_projects',
             'view_clients', 'create_clients', 'edit_clients',
-            'view_purchases', 'create_purchases', 'edit_purchases',
             'view_expenses', 'create_expenses', 'edit_expenses', 'approve_expenses',
             'view_incomes', 'create_incomes', 'edit_incomes',
             'view_reports',

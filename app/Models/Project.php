@@ -44,11 +44,6 @@ class Project extends Model
         return $this->hasMany(ProjectFile::class);
     }
 
-    public function purchases(): HasMany
-    {
-        return $this->hasMany(Purchase::class);
-    }
-
     public function expenses(): HasMany
     {
         return $this->hasMany(Expense::class);

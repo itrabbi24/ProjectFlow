@@ -4,9 +4,7 @@ namespace App\Services;
 
 use App\Models\Project;
 use App\Models\Expense;
-use App\Models\Purchase;
 use App\Models\Income;
-use App\Models\Client;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 
@@ -19,18 +17,14 @@ class ReportService
         $completedProjects = Project::where('status', 'completed')->count();
 
         $totalIncome = (float) Income::sum('amount');
-        
-        $totalExpenses = (float) Expense::where('status', 'approved')->sum('amount');
-        $totalPurchases = (float) Purchase::sum('amount');
-        $totalSpent = $totalExpenses + $totalPurchases;
+        $totalSpent = (float) Expense::where('status', 'approved')->sum('amount');
 
         $netProfit = $totalIncome - $totalSpent;
-        $cashInHand = $totalIncome - $totalSpent; // Cash flow balance
+        $cashInHand = $totalIncome - $totalSpent;
 
         $todayExpense = (float) Expense::whereDate('expense_date', Carbon::today())
             ->where('status', 'approved')
-            ->sum('amount') 
-            + (float) Purchase::whereDate('purchase_date', Carbon::today())->sum('amount');
+            ->sum('amount');
 
         $todayIncome = (float) Income::whereDate('income_date', Carbon::today())->sum('amount');
 
@@ -40,7 +34,7 @@ class ReportService
             ->limit(5)
             ->get();
 
-        // Recent transactions (merged logs of incomes, expenses, purchases)
+        // Recent transactions (merged logs of incomes and expenses)
         $incomes = Income::with('project')
             ->select('id', 'income_date as date', DB::raw('"income" as type'), 'amount', 'payment_method', 'project_id', 'invoice_number as reference')
             ->latest('income_date')
@@ -54,13 +48,7 @@ class ReportService
             ->limit(5)
             ->get();
 
-        $purchases = Purchase::with('project')
-            ->select('id', 'purchase_date as date', DB::raw('"purchase" as type'), 'amount', 'payment_method', 'project_id', 'supplier_name as reference')
-            ->latest('purchase_date')
-            ->limit(5)
-            ->get();
-
-        $recentTransactions = $incomes->concat($expenses)->concat($purchases)
+        $recentTransactions = $incomes->concat($expenses)
             ->sortByDesc('date')
             ->take(8)
             ->values();
@@ -82,45 +70,27 @@ class ReportService
             ->groupBy('month')
             ->pluck('total', 'month');
 
-        $dbPurchases = Purchase::selectRaw('MONTH(purchase_date) as month, SUM(amount) as total')
-            ->whereYear('purchase_date', $year)
-            ->groupBy('month')
-            ->pluck('total', 'month');
-
         for ($m = 1; $m <= 12; $m++) {
             $inc = (float) ($dbIncomes[$m] ?? 0);
-            $exp = (float) ($dbExpenses[$m] ?? 0) + (float) ($dbPurchases[$m] ?? 0);
-            
+            $exp = (float) ($dbExpenses[$m] ?? 0);
+
             $monthlyIncome[$m] = $inc;
             $monthlyExpense[$m] = $exp;
             $monthlyProfit[$m] = $inc - $exp;
         }
 
-        // Top expense categories (combining approved expenses + purchases)
-        $expenseCategories = Expense::selectRaw('category, SUM(amount) as total')
+        // Top expense categories (approved expenses)
+        $topCategories = Expense::selectRaw('category, SUM(amount) as total')
             ->where('status', 'approved')
             ->groupBy('category')
+            ->orderByDesc('total')
+            ->limit(5)
             ->get()
-            ->pluck('total', 'category')
+            ->map(fn($row) => [
+                'name' => $row->category,
+                'value' => (float) $row->total
+            ])
             ->toArray();
-
-        $purchaseCategories = Purchase::selectRaw('category, SUM(amount) as total')
-            ->groupBy('category')
-            ->get()
-            ->pluck('total', 'category')
-            ->toArray();
-
-        $categories = array_keys(array_merge($expenseCategories, $purchaseCategories));
-        $topCategories = [];
-        foreach ($categories as $cat) {
-            $total = (float) ($expenseCategories[$cat] ?? 0) + (float) ($purchaseCategories[$cat] ?? 0);
-            $topCategories[] = [
-                'name' => $cat,
-                'value' => $total
-            ];
-        }
-        usort($topCategories, fn($a, $b) => $b['value'] <=> $a['value']);
-        $topCategories = array_slice($topCategories, 0, 5);
 
         return [
             'total_projects' => $totalProjects,
@@ -164,9 +134,7 @@ class ReportService
         foreach ($projects as $proj) {
             $budget = (float) $proj->budget;
             $income = (float) $proj->incomes()->sum('amount');
-            $expenses = (float) $proj->expenses()->where('status', 'approved')->sum('amount');
-            $purchases = (float) $proj->purchases()->sum('amount');
-            $spent = $expenses + $purchases;
+            $spent = (float) $proj->expenses()->where('status', 'approved')->sum('amount');
             $profit = $income - $spent;
             $margin = $income > 0 ? round(($profit / $income) * 100, 2) : 0;
 
@@ -175,8 +143,10 @@ class ReportService
                 'code' => $proj->code,
                 'name' => $proj->name,
                 'client' => $proj->client->name,
+                'company' => $proj->client->company,
                 'manager' => $proj->manager->name,
                 'status' => $proj->status,
+                'start_date' => $proj->start_date->format('Y-m-d'),
                 'budget' => $budget,
                 'income' => $income,
                 'spent' => $spent,
@@ -202,75 +172,16 @@ class ReportService
             $query->where('category', $filters['category']);
         }
 
-        $expenses = $query->get();
-        
-        $purchaseQuery = Purchase::with('project');
-        if (!empty($filters['start_date']) && !empty($filters['end_date'])) {
-            $purchaseQuery->whereBetween('purchase_date', [$filters['start_date'], $filters['end_date']]);
-        }
-        if (!empty($filters['project_id'])) {
-            $purchaseQuery->where('project_id', $filters['project_id']);
-        }
-        if (!empty($filters['category'])) {
-            $purchaseQuery->where('category', $filters['category']);
-        }
-        
-        $purchases = $purchaseQuery->get();
-
-        $report = [];
-
-        foreach ($expenses as $exp) {
-            $report[] = [
-                'date' => $exp->expense_date->format('Y-m-d'),
-                'type' => 'Expense',
-                'category' => $exp->category,
-                'project' => $exp->project->name,
-                'project_code' => $exp->project->code,
-                'party' => $exp->paidBy->name,
-                'payment_method' => $exp->payment_method,
-                'amount' => (float) $exp->amount,
-                'description' => $exp->description
-            ];
-        }
-
-        foreach ($purchases as $pur) {
-            $report[] = [
-                'date' => $pur->purchase_date->format('Y-m-d'),
-                'type' => 'Purchase',
-                'category' => $pur->category,
-                'project' => $pur->project->name,
-                'project_code' => $pur->project->code,
-                'party' => $pur->supplier_name,
-                'payment_method' => $pur->payment_method,
-                'amount' => (float) $pur->amount,
-                'description' => $pur->remarks
-            ];
-        }
-
-        usort($report, fn($a, $b) => strcmp($b['date'], $a['date']));
-
-        return $report;
-    }
-
-    public function getPurchaseSummaryReport(array $filters): array
-    {
-        $query = Purchase::with('project');
-
-        if (!empty($filters['start_date']) && !empty($filters['end_date'])) {
-            $query->whereBetween('purchase_date', [$filters['start_date'], $filters['end_date']]);
-        }
-        if (!empty($filters['project_id'])) {
-            $query->where('project_id', $filters['project_id']);
-        }
-
-        return $query->latest('purchase_date')->get()->map(fn($pur) => [
-            'date' => $pur->purchase_date->format('Y-m-d'),
-            'supplier' => $pur->supplier_name,
-            'item' => $pur->category,
-            'project' => $pur->project->name,
-            'project_code' => $pur->project->code,
-            'payment_method' => $pur->payment_method,
-            'amount' => (float) $pur->amount,
+        return $query->latest('expense_date')->get()->map(fn($exp) => [
+            'date' => $exp->expense_date->format('Y-m-d'),
+            'type' => 'Expense',
+            'category' => $exp->category,
+            'project' => $exp->project->name,
+            'project_code' => $exp->project->code,
+            'party' => $exp->paidBy->name,
+            'payment_method' => $exp->payment_method,
+            'amount' => (float) $exp->amount,
+            'description' => $exp->description
         ])->toArray();
     }
 
@@ -287,10 +198,14 @@ class ReportService
         if (!empty($filters['client_id'])) {
             $query->where('client_id', $filters['client_id']);
         }
+        if (!empty($filters['category'])) {
+            $query->where('category', $filters['category']);
+        }
 
-        return $query->get()->map(fn($inc) => [
+        return $query->latest('income_date')->get()->map(fn($inc) => [
             'date' => $inc->income_date->format('Y-m-d'),
             'invoice_number' => $inc->invoice_number,
+            'category' => $inc->category,
             'client' => $inc->client->name,
             'project' => $inc->project->name,
             'project_code' => $inc->project->code,

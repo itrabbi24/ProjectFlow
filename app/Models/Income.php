@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 
 #[Fillable([
-    'income_date', 'client_id', 'project_id', 'invoice_number',
+    'income_date', 'client_id', 'project_id', 'invoice_number', 'category',
     'amount', 'payment_method', 'reference_number', 'remarks', 'attachment_path'
 ])]
 class Income extends Model

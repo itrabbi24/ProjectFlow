@@ -5,7 +5,6 @@ use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\ProjectController;
 use App\Http\Controllers\Api\ClientController;
 use App\Http\Controllers\Api\ExpenseController;
-use App\Http\Controllers\Api\PurchaseController;
 use App\Http\Controllers\Api\IncomeController;
 use App\Http\Controllers\Api\ReportController;
 use App\Http\Controllers\Api\SettingController;
@@ -27,7 +26,6 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/reports/profit', [ReportController::class, 'projectProfit']);
     Route::get('/reports/expense', [ReportController::class, 'expense']);
     Route::get('/reports/income', [ReportController::class, 'income']);
-    Route::get('/reports/purchase-summary', [ReportController::class, 'purchaseSummary']);
 
     // Application Settings
     Route::get('/settings', [SettingController::class, 'index']);
@@ -46,7 +44,6 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::apiResource('projects', ProjectController::class);
     Route::apiResource('clients', ClientController::class);
     Route::apiResource('expenses', ExpenseController::class);
-    Route::apiResource('purchases', PurchaseController::class);
     Route::apiResource('incomes', IncomeController::class);
     Route::apiResource('users', UserController::class);
     Route::apiResource('categories', CategoryController::class)->except(['show']);

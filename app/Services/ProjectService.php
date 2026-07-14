@@ -94,20 +94,18 @@ class ProjectService
     public function getProjectFinancials(Project $project): array
     {
         $budget = (float) $project->budget;
-        
-        $totalPurchases = (float) $project->purchases()->sum('amount');
+
         $totalExpenses = (float) $project->expenses()->where('status', 'approved')->sum('amount');
-        
-        $totalSpent = $totalPurchases + $totalExpenses;
+
+        $totalSpent = $totalExpenses;
         $remainingBudget = $budget - $totalSpent;
         $budgetPercentage = $budget > 0 ? round(($totalSpent / $budget) * 100, 2) : 0;
-        
+
         $totalIncome = (float) $project->incomes()->sum('amount');
         $actualNetProfit = $totalIncome - $totalSpent;
 
         return [
             'budget' => $budget,
-            'total_purchases' => $totalPurchases,
             'total_expenses' => $totalExpenses,
             'total_spent' => $totalSpent,
             'remaining_budget' => $remainingBudget,
