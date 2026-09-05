@@ -92,6 +92,12 @@ class ReportService
             ])
             ->toArray();
 
+        $totalFixedAssets = \App\Models\Asset::where('status', '!=', 'disposed')->count();
+        $fixedAssetsValuation = (float) \App\Models\Asset::where('status', '!=', 'disposed')->sum('current_value');
+        $onlineUsers = \App\Models\User::whereNotNull('last_seen_at')
+            ->where('last_seen_at', '>=', Carbon::now()->subMinutes(5))
+            ->get(['id', 'name', 'username', 'last_seen_at', 'role_id']);
+
         return [
             'total_projects' => $totalProjects,
             'running_projects' => $runningProjects,
@@ -102,6 +108,10 @@ class ReportService
             'cash_in_hand' => $cashInHand,
             'today_expense' => $todayExpense,
             'today_income' => $todayIncome,
+            'total_fixed_assets' => $totalFixedAssets,
+            'fixed_assets_valuation' => $fixedAssetsValuation,
+            'online_users_count' => $onlineUsers->count(),
+            'online_users' => $onlineUsers,
             'recent_projects' => $recentProjects,
             'recent_transactions' => $recentTransactions,
             'charts' => [

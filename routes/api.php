@@ -11,6 +11,8 @@ use App\Http\Controllers\Api\SettingController;
 use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Api\RoleController;
 use App\Http\Controllers\Api\CategoryController;
+use App\Http\Controllers\Api\AssetController;
+use App\Http\Controllers\Api\ActivityLogController;
 
 // Public Routes
 Route::post('/login', [AuthController::class, 'login']);
@@ -26,6 +28,10 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/reports/profit', [ReportController::class, 'projectProfit']);
     Route::get('/reports/expense', [ReportController::class, 'expense']);
     Route::get('/reports/income', [ReportController::class, 'income']);
+    Route::get('/reports/assets', [AssetController::class, 'report']);
+
+    // Activity Audit Logs
+    Route::get('/activity-logs', [ActivityLogController::class, 'index']);
 
     // Application Settings
     Route::get('/settings', [SettingController::class, 'index']);
@@ -34,6 +40,7 @@ Route::middleware('auth:sanctum')->group(function () {
     // Project files & Custom Actions
     Route::post('/projects/{id}/files', [ProjectController::class, 'uploadFile']);
     Route::post('/expenses/{id}/approve', [ExpenseController::class, 'approve']);
+    Route::post('/assets/{id}/dispose', [AssetController::class, 'dispose']);
 
     // Roles & Permissions management
     Route::get('/roles', [RoleController::class, 'index']);
@@ -45,6 +52,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::apiResource('clients', ClientController::class);
     Route::apiResource('expenses', ExpenseController::class);
     Route::apiResource('incomes', IncomeController::class);
+    Route::apiResource('assets', AssetController::class);
     Route::apiResource('users', UserController::class);
     Route::apiResource('categories', CategoryController::class)->except(['show']);
 });

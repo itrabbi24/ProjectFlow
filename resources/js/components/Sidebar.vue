@@ -102,7 +102,9 @@ import {
   BarChart3,
   ShieldCheck,
   Settings,
-  Tag
+  Tag,
+  Boxes,
+  ScrollText
 } from 'lucide-vue-next';
 
 defineProps({
@@ -122,9 +124,11 @@ const navItems = [
   { name: 'Clients', to: '/clients', icon: Users, permission: 'view_clients' },
   { name: 'Incomes', to: '/incomes', icon: Wallet, permission: 'view_incomes' },
   { name: 'Expenses', to: '/expenses', icon: Receipt, permission: 'view_expenses' },
+  { name: 'Fixed Assets', to: '/assets', icon: Boxes, permission: 'view_assets' },
   { name: 'Categories', to: '/categories', icon: Tag, permission: 'view_categories' },
   { name: 'Reports', to: '/reports', icon: BarChart3, permission: 'view_reports' },
   { name: 'User Management', to: '/users', icon: ShieldCheck, permission: 'view_users' },
+  { name: 'Activity Log', to: '/activity-logs', icon: ScrollText, permission: 'view_activity_logs' },
   { name: 'Settings', to: '/settings', icon: Settings, permission: 'view_settings' }
 ];
 

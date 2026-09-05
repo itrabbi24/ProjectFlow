@@ -80,11 +80,25 @@
               :key="user.id" 
               class="hover:bg-slate-50/50 transition"
             >
-              <td class="p-4 font-bold text-slate-800 flex items-center space-x-2.5">
-                <div class="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-600 font-bold flex items-center justify-center text-xs">
-                  {{ user.name.charAt(0) }}
+              <td class="p-4 font-bold text-slate-800">
+                <div class="flex items-center space-x-2.5">
+                  <div class="relative">
+                    <div class="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-600 font-bold flex items-center justify-center text-xs">
+                      {{ user.name.charAt(0) }}
+                    </div>
+                    <span 
+                      v-if="user.is_online" 
+                      class="absolute -top-1 -right-1 w-3 h-3 rounded-full bg-emerald-500 border-2 border-white ring-1 ring-emerald-200 animate-pulse" 
+                      title="Online Now"
+                    ></span>
+                  </div>
+                  <div>
+                    <div class="flex items-center space-x-1.5">
+                      <span>{{ user.name }}</span>
+                      <span v-if="user.is_online" class="text-[9px] font-bold px-1.5 py-0.2 rounded bg-emerald-100 text-emerald-700">ONLINE</span>
+                    </div>
+                  </div>
                 </div>
-                <span>{{ user.name }}</span>
               </td>
               <td class="p-4 font-mono font-medium text-slate-500">{{ user.username }}</td>
               <td class="p-4 text-slate-600">{{ user.email }}</td>

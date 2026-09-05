@@ -36,63 +36,98 @@
     </div>
 
     <!-- Metrics Cards Grid -->
-    <div v-else class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+    <div v-else class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
       <!-- Total Projects -->
-      <div class="bg-white border border-slate-100 p-5 rounded-2xl shadow-sm relative overflow-hidden group">
-        <div class="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center mb-3">
-          <FolderOpen class="w-5 h-5" />
+      <div class="bg-white border border-slate-100 p-4 rounded-2xl shadow-sm relative overflow-hidden group">
+        <div class="w-9 h-9 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center mb-2.5">
+          <FolderOpen class="w-4 h-4" />
         </div>
-        <span class="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Total Projects</span>
-        <h2 class="text-xl font-bold text-slate-800 mt-1">{{ stats.total_projects }}</h2>
+        <span class="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Projects</span>
+        <h2 class="text-lg font-bold text-slate-800 mt-1">{{ stats.total_projects }}</h2>
         <div class="flex items-center space-x-2 mt-2 text-[10px] text-slate-400">
           <span class="text-emerald-500 font-semibold flex items-center"><ChevronUp class="w-3.5 h-3.5" />{{ stats.running_projects }}</span>
-          <span>running</span>
-          <span class="text-amber-500 font-semibold">{{ stats.completed_projects }}</span>
-          <span>done</span>
+          <span>active</span>
         </div>
       </div>
 
       <!-- Income -->
-      <div class="bg-white border border-slate-100 p-5 rounded-2xl shadow-sm relative overflow-hidden group">
-        <div class="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center mb-3">
-          <ArrowUpRight class="w-5 h-5" />
+      <div class="bg-white border border-slate-100 p-4 rounded-2xl shadow-sm relative overflow-hidden group">
+        <div class="w-9 h-9 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center mb-2.5">
+          <ArrowUpRight class="w-4 h-4" />
         </div>
         <span class="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Total Incomes</span>
-        <h2 class="text-xl font-bold text-slate-800 mt-1">{{ sym }}{{ stats.total_income.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}</h2>
+        <h2 class="text-lg font-bold text-slate-800 mt-1">{{ sym }}{{ (stats.total_income || 0).toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 }) }}</h2>
         <div class="flex items-center mt-2 text-[10px] text-slate-400">
-          <span class="text-emerald-500 font-semibold flex items-center">+{{ sym }}{{ stats.today_income.toLocaleString() }}</span>
-          <span class="ml-1">received today</span>
+          <span class="text-emerald-500 font-semibold flex items-center">+{{ sym }}{{ (stats.today_income || 0).toLocaleString() }}</span>
+          <span class="ml-1">today</span>
         </div>
       </div>
 
       <!-- Expense -->
-      <div class="bg-white border border-slate-100 p-5 rounded-2xl shadow-sm relative overflow-hidden group">
-        <div class="w-10 h-10 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center mb-3">
-          <ArrowDownLeft class="w-5 h-5" />
+      <div class="bg-white border border-slate-100 p-4 rounded-2xl shadow-sm relative overflow-hidden group">
+        <div class="w-9 h-9 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center mb-2.5">
+          <ArrowDownLeft class="w-4 h-4" />
         </div>
         <span class="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Total Spent</span>
-        <h2 class="text-xl font-bold text-slate-800 mt-1">{{ sym }}{{ stats.total_spent.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}</h2>
+        <h2 class="text-lg font-bold text-slate-800 mt-1">{{ sym }}{{ (stats.total_spent || 0).toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 }) }}</h2>
         <div class="flex items-center mt-2 text-[10px] text-slate-400">
-          <span class="text-rose-500 font-semibold flex items-center">+{{ sym }}{{ stats.today_expense.toLocaleString() }}</span>
-          <span class="ml-1">spent today</span>
+          <span class="text-rose-500 font-semibold flex items-center">+{{ sym }}{{ (stats.today_expense || 0).toLocaleString() }}</span>
+          <span class="ml-1">today</span>
         </div>
       </div>
 
       <!-- Net Profit -->
-      <div class="bg-white border border-slate-100 p-5 rounded-2xl shadow-sm relative overflow-hidden group">
+      <div class="bg-white border border-slate-100 p-4 rounded-2xl shadow-sm relative overflow-hidden group">
         <div 
           :class="[
-            'w-10 h-10 rounded-xl flex items-center justify-center mb-3',
+            'w-9 h-9 rounded-xl flex items-center justify-center mb-2.5',
             stats.net_profit >= 0 ? 'bg-indigo-50 text-indigo-600' : 'bg-rose-50 text-rose-600'
           ]"
         >
-          <DollarSign class="w-5 h-5" />
+          <DollarSign class="w-4 h-4" />
         </div>
-        <span class="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Actual Net Profit</span>
-        <h2 class="text-xl font-bold text-slate-800 mt-1">{{ sym }}{{ stats.net_profit.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}</h2>
+        <span class="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Net Profit</span>
+        <h2 class="text-lg font-bold text-slate-800 mt-1">{{ sym }}{{ (stats.net_profit || 0).toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 }) }}</h2>
         <div class="flex items-center mt-2 text-[10px] text-slate-400">
           <span class="font-semibold text-indigo-500">Margin:</span>
           <span class="ml-1 font-medium">{{ stats.total_income > 0 ? ((stats.net_profit / stats.total_income) * 100).toFixed(1) : 0 }}%</span>
+        </div>
+      </div>
+
+      <!-- Fixed Assets Valuation -->
+      <div class="bg-white border border-slate-100 p-4 rounded-2xl shadow-sm relative overflow-hidden group col-span-2 sm:col-span-1">
+        <div class="w-9 h-9 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center mb-2.5">
+          <Boxes class="w-4 h-4" />
+        </div>
+        <span class="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Fixed Assets</span>
+        <h2 class="text-lg font-bold text-slate-800 mt-1">{{ sym }}{{ (stats.fixed_assets_valuation || 0).toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 }) }}</h2>
+        <div class="flex items-center justify-between mt-2 text-[10px] text-slate-400">
+          <span class="font-semibold text-purple-600">{{ stats.total_fixed_assets || 0 }} assets</span>
+          <router-link to="/assets" class="text-indigo-600 hover:underline">View</router-link>
+        </div>
+      </div>
+    </div>
+
+    <!-- Active Team Presence Bar -->
+    <div v-if="stats.online_users && stats.online_users.length > 0" class="bg-emerald-500/10 border border-emerald-500/20 rounded-2xl p-3 flex flex-wrap items-center justify-between gap-2">
+      <div class="flex items-center space-x-2">
+        <span class="relative flex h-2.5 w-2.5">
+          <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+          <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
+        </span>
+        <span class="text-xs font-semibold text-emerald-800">
+          {{ stats.online_users_count }} Team Member{{ stats.online_users_count > 1 ? 's' : '' }} Online Now
+        </span>
+      </div>
+      <div class="flex items-center space-x-1.5 overflow-x-auto">
+        <div 
+          v-for="u in stats.online_users" 
+          :key="u.id" 
+          class="flex items-center space-x-1 px-2 py-0.5 rounded-full bg-white/80 border border-emerald-200 text-[10px] font-medium text-slate-700 shadow-2xs"
+          :title="`Active: ${u.name} (@${u.username})`"
+        >
+          <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+          <span>{{ u.name }}</span>
         </div>
       </div>
     </div>
@@ -245,7 +280,8 @@ import {
   DollarSign,
   Plus,
   ChevronUp,
-  Receipt
+  Receipt,
+  Boxes
 } from 'lucide-vue-next';
 import axios from 'axios';
 import { Chart, registerables } from 'chart.js';

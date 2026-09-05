@@ -35,8 +35,11 @@ class AuthService
             ]);
         }
 
-        // Update last login
-        $user->update(['last_login_at' => Carbon::now()]);
+        // Update last login & activity
+        $user->update([
+            'last_login_at' => Carbon::now(),
+            'last_seen_at' => Carbon::now(),
+        ]);
 
         // Generate Sanctum token
         $user->load('role.permissions');

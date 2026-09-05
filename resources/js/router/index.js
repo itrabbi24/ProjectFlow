@@ -53,6 +53,18 @@ const routes = [
                 meta: { permission: 'view_expenses' }
             },
             {
+                path: 'assets',
+                name: 'assets',
+                component: () => import('@/views/AssetsView.vue'),
+                meta: { permission: 'view_assets' }
+            },
+            {
+                path: 'activity-logs',
+                name: 'activity-logs',
+                component: () => import('@/views/ActivityLogsView.vue'),
+                meta: { permission: 'view_activity_logs' }
+            },
+            {
                 path: 'reports',
                 name: 'reports',
                 component: () => import('@/views/ReportsView.vue'),

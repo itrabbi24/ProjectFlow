@@ -42,6 +42,8 @@ class AuthController extends Controller
     public function me(Request $request): JsonResponse
     {
         $user = $request->user()->load('role.permissions');
+        $user->update(['last_seen_at' => now()]);
+
         return response()->json([
             'status' => 'success',
             'data' => [
