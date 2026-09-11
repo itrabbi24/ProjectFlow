@@ -23,6 +23,8 @@ class UserRequest extends FormRequest
             'password' => ($isPost ? 'required' : 'nullable') . '|string|min:6',
             'role_id' => ($isPost ? 'required' : 'sometimes|required') . '|exists:roles,id',
             'status' => ($isPost ? 'required' : 'sometimes|required') . '|in:active,inactive',
+            'project_ids' => 'nullable|array',
+            'project_ids.*' => 'exists:projects,id',
         ];
     }
 }

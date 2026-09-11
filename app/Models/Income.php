@@ -23,6 +23,11 @@ class Income extends Model
         ];
     }
 
+    public function setIncomeDateAttribute($value): void
+    {
+        $this->attributes['income_date'] = $value ? \Carbon\Carbon::parse($value)->format('Y-m-d') : null;
+    }
+
     public function project(): BelongsTo
     {
         return $this->belongsTo(Project::class);

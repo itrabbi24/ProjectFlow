@@ -277,7 +277,7 @@
 
         <!-- Amount -->
         <div>
-          <label class="block text-xs font-semibold text-slate-700">Expense Amount ($)</label>
+          <label class="block text-xs font-semibold text-slate-700">Expense Amount ({{ sym }})</label>
           <input 
             type="number" 
             step="0.01" 
@@ -430,13 +430,13 @@ async function fetchExpenses() {
 async function fetchDropdowns() {
   try {
     const [projectsRes, usersRes] = await Promise.all([
-      axios.get('/projects?per_page=100'),
-      axios.get('/users?per_page=100')
+      axios.get('/projects/options').catch(() => axios.get('/projects?per_page=100')),
+      axios.get('/users/options').catch(() => axios.get('/users?per_page=100'))
     ]);
-    projectsList.value = projectsRes.data.data.data || [];
-    staffList.value = usersRes.data.data.data || [];
+    projectsList.value = Array.isArray(projectsRes.data.data) ? projectsRes.data.data : (projectsRes.data.data?.data || []);
+    staffList.value = Array.isArray(usersRes.data.data) ? usersRes.data.data : (usersRes.data.data?.data || []);
   } catch (e) {
-    console.error(e);
+    console.error('Failed to load expense dropdown options:', e);
   }
 }
 

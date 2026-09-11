@@ -63,8 +63,22 @@ class IncomeController extends Controller
     {
         Gate::authorize('create', Income::class);
 
+        $data = $request->validated();
+        $user = $request->user();
+
+        // Enforce project assignment check
+        if ($user && $user->role && $user->role->slug !== 'administrator') {
+            $assignedCount = $user->assignedProjects()->count();
+            if ($assignedCount > 0 && !$user->assignedProjects()->where('projects.id', $data['project_id'])->exists()) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'You are not authorized to log income for this project.'
+                ], 403);
+            }
+        }
+
         $income = $this->incomeService->createIncome(
-            $request->validated(),
+            $data,
             $request->file('attachment')
         );
 
@@ -88,6 +102,18 @@ class IncomeController extends Controller
 
     public function update(IncomeRequest $request, int $id): JsonResponse
     {
+        $data = $request->validated();
+        $user = $request->user();
+
+        if (isset($data['project_id']) && $user && $user->role && $user->role->slug !== 'administrator') {
+            $assignedCount = $user->assignedProjects()->count();
+            if ($assignedCount > 0 && !$user->assignedProjects()->where('projects.id', $data['project_id'])->exists()) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'You are not authorized to assign income to this project.'
+                ], 403);
+            }
+        }
         $income = $this->incomeRepo->findOrFail($id);
         Gate::authorize('update', $income);
 

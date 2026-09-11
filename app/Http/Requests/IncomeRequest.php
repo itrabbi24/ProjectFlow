@@ -11,6 +11,18 @@ class IncomeRequest extends FormRequest
         return true;
     }
 
+    protected function prepareForValidation(): void
+    {
+        if ($this->filled('income_date')) {
+            try {
+                $this->merge([
+                    'income_date' => \Carbon\Carbon::parse($this->input('income_date'))->format('Y-m-d')
+                ]);
+            } catch (\Throwable $e) {
+            }
+        }
+    }
+
     public function rules(): array
     {
         $isPost = $this->isMethod('post');

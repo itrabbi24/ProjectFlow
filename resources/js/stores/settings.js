@@ -5,9 +5,9 @@ import axios from 'axios';
 export const useSettingStore = defineStore('settings', () => {
     const settings = ref({
         company_name: 'ProjectFlow Corp',
-        currency: 'USD',
-        currency_symbol: '$',
-        timezone: 'UTC',
+        currency: 'BDT',
+        currency_symbol: '৳',
+        timezone: 'Asia/Dhaka',
         date_format: 'Y-m-d',
         theme: 'light'
     });

@@ -328,7 +328,7 @@
         <!-- Budget & Est Profit Grid -->
         <div class="grid grid-cols-2 gap-4">
           <div>
-            <label class="block text-xs font-semibold text-slate-700">Total Budget ($)</label>
+            <label class="block text-xs font-semibold text-slate-700">Total Budget ({{ sym }})</label>
             <input 
               type="number" 
               step="0.01" 
@@ -339,7 +339,7 @@
             />
           </div>
           <div>
-            <label class="block text-xs font-semibold text-slate-700">Estimated Profit ($)</label>
+            <label class="block text-xs font-semibold text-slate-700">Estimated Profit ({{ sym }})</label>
             <input 
               type="number" 
               step="0.01" 
@@ -526,10 +526,10 @@ async function fetchDropdowns() {
   try {
     const [clientsRes, usersRes] = await Promise.all([
       axios.get('/clients?per_page=100'),
-      axios.get('/users?per_page=100')
+      axios.get('/users/options').catch(() => axios.get('/users?per_page=100'))
     ]);
-    clientsList.value = clientsRes.data.data.data || [];
-    managersList.value = usersRes.data.data.data || [];
+    clientsList.value = Array.isArray(clientsRes.data.data) ? clientsRes.data.data : (clientsRes.data.data?.data || []);
+    managersList.value = Array.isArray(usersRes.data.data) ? usersRes.data.data : (usersRes.data.data?.data || []);
   } catch (e) {
     console.error('Failed to load selection dropdowns:', e);
   }

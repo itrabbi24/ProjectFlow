@@ -29,7 +29,7 @@ class UserController extends Controller
     {
         Gate::authorize('viewAny', User::class);
 
-        $query = User::with('role');
+        $query = User::with(['role', 'assignedProjects:id,name,code']);
 
         if ($request->filled('search')) {
             $search = $request->input('search');
@@ -40,7 +40,22 @@ class UserController extends Controller
             });
         }
 
-        $users = $query->latest()->paginate(15);
+        $perPage = (int) $request->input('per_page', 15);
+        $users = $query->latest()->paginate($perPage);
+
+        return response()->json([
+            'status' => 'success',
+            'data' => $users
+        ]);
+    }
+
+    public function options(): JsonResponse
+    {
+        $users = User::with('role:id,name,slug')
+            ->select('id', 'name', 'username', 'email', 'role_id')
+            ->where('status', 'active')
+            ->orderBy('name')
+            ->get();
 
         return response()->json([
             'status' => 'success',
@@ -53,10 +68,16 @@ class UserController extends Controller
         Gate::authorize('create', User::class);
 
         $data = $request->validated();
+        $projectIds = $data['project_ids'] ?? null;
+        unset($data['project_ids']);
+
         $data['password'] = Hash::make($data['password']);
 
         $user = $this->userRepo->create($data);
-        $user->load('role');
+        if ($projectIds !== null) {
+            $user->assignedProjects()->sync($projectIds);
+        }
+        $user->load(['role', 'assignedProjects:id,name,code']);
 
         $this->activityLogService->log('created', "User profile created for '{$user->name}' (Username: {$user->username})", $user);
 
@@ -69,7 +90,7 @@ class UserController extends Controller
 
     public function show(int $id): JsonResponse
     {
-        $user = $this->userRepo->findOrFail($id, ['role']);
+        $user = $this->userRepo->findOrFail($id, ['role', 'assignedProjects:id,name,code']);
         Gate::authorize('view', $user);
 
         return response()->json([
@@ -84,6 +105,9 @@ class UserController extends Controller
         Gate::authorize('update', $user);
 
         $data = $request->validated();
+        $projectIds = $data['project_ids'] ?? null;
+        unset($data['project_ids']);
+
         if (isset($data['password']) && !empty($data['password'])) {
             $data['password'] = Hash::make($data['password']);
         } else {
@@ -91,7 +115,10 @@ class UserController extends Controller
         }
 
         $user->update($data);
-        $user->load('role');
+        if ($projectIds !== null) {
+            $user->assignedProjects()->sync($projectIds);
+        }
+        $user->load(['role', 'assignedProjects:id,name,code']);
 
         $this->activityLogService->log('updated', "User profile for '{$user->name}' was updated", $user);
 

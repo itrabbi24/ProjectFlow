@@ -11,6 +11,7 @@ use Illuminate\Notifications\Notifiable;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Laravel\Sanctum\HasApiTokens;
 
 #[Fillable(['name', 'username', 'email', 'password', 'role_id', 'status', 'last_login_at', 'last_seen_at', 'avatar_path'])]
@@ -51,6 +52,11 @@ class User extends Authenticatable
     public function managedProjects(): HasMany
     {
         return $this->hasMany(Project::class, 'manager_id');
+    }
+
+    public function assignedProjects(): BelongsToMany
+    {
+        return $this->belongsToMany(Project::class, 'project_user')->withTimestamps();
     }
 
     public function expenses(): HasMany

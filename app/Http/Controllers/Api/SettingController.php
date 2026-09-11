@@ -22,11 +22,17 @@ class SettingController extends Controller
         $this->activityLogService = $activityLogService;
     }
 
-    public function index(): JsonResponse
+    public function index(Request $request): JsonResponse
     {
-        Gate::authorize('view_settings');
-
+        $user = $request->user();
         $settings = $this->settingService->getAllSettings();
+
+        // If user doesn't have view_settings permission, only return public appearance/formatting settings
+        if (!$user || (!$user->hasPermission('view_settings') && $user->role?->slug !== 'administrator')) {
+            $publicKeys = ['company_name', 'currency', 'currency_symbol', 'timezone', 'date_format', 'theme'];
+            $settings = array_intersect_key($settings, array_flip($publicKeys));
+        }
+
         return response()->json([
             'status' => 'success',
             'data' => $settings

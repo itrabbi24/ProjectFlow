@@ -23,6 +23,11 @@ class Expense extends Model
         ];
     }
 
+    public function setExpenseDateAttribute($value): void
+    {
+        $this->attributes['expense_date'] = $value ? \Carbon\Carbon::parse($value)->format('Y-m-d') : null;
+    }
+
     public function project(): BelongsTo
     {
         return $this->belongsTo(Project::class);

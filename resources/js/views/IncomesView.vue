@@ -272,7 +272,7 @@
 
         <!-- Amount -->
         <div>
-          <label class="block text-xs font-semibold text-slate-700">Received Amount</label>
+          <label class="block text-xs font-semibold text-slate-700">Received Amount ({{ sym }})</label>
           <input
             type="number"
             step="0.01"
@@ -414,13 +414,13 @@ async function fetchIncomes() {
 async function fetchDropdowns() {
   try {
     const [projectsRes, clientsRes] = await Promise.all([
-      axios.get('/projects?per_page=100'),
+      axios.get('/projects/options').catch(() => axios.get('/projects?per_page=100')),
       axios.get('/clients?per_page=100')
     ]);
-    projectsList.value = projectsRes.data.data.data || [];
-    clientsList.value = clientsRes.data.data.data || [];
+    projectsList.value = Array.isArray(projectsRes.data.data) ? projectsRes.data.data : (projectsRes.data.data?.data || []);
+    clientsList.value = Array.isArray(clientsRes.data.data) ? clientsRes.data.data : (clientsRes.data.data?.data || []);
   } catch (e) {
-    console.error(e);
+    console.error('Failed to load income dropdown options:', e);
   }
 }
 

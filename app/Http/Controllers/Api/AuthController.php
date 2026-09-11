@@ -52,4 +52,30 @@ class AuthController extends Controller
             ]
         ]);
     }
+
+    public function changePassword(Request $request): JsonResponse
+    {
+        $request->validate([
+            'current_password' => 'required|string',
+            'password' => 'required|string|min:6|confirmed',
+        ]);
+
+        $user = $request->user();
+
+        if (!\Illuminate\Support\Facades\Hash::check($request->input('current_password'), $user->password)) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'The current password does not match our records.'
+            ], 422);
+        }
+
+        $user->update([
+            'password' => \Illuminate\Support\Facades\Hash::make($request->input('password'))
+        ]);
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Password updated successfully.'
+        ]);
+    }
 }

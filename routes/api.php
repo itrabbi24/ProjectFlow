@@ -16,12 +16,14 @@ use App\Http\Controllers\Api\ActivityLogController;
 
 // Public Routes
 Route::post('/login', [AuthController::class, 'login']);
+Route::get('/settings', [SettingController::class, 'index']);
 
 // Protected Routes (Sanctum Authentication)
 Route::middleware('auth:sanctum')->group(function () {
     // Auth status & profile
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::get('/me', [AuthController::class, 'me']);
+    Route::post('/change-password', [AuthController::class, 'changePassword']);
 
     // Dashboard & Analytical Reports
     Route::get('/dashboard-stats', [ReportController::class, 'dashboard']);
@@ -34,7 +36,6 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/activity-logs', [ActivityLogController::class, 'index']);
 
     // Application Settings
-    Route::get('/settings', [SettingController::class, 'index']);
     Route::post('/settings', [SettingController::class, 'update']);
 
     // Project files & Custom Actions
@@ -44,10 +45,14 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Roles & Permissions management
     Route::get('/roles', [RoleController::class, 'index']);
+    Route::post('/roles', [RoleController::class, 'store']);
+    Route::delete('/roles/{id}', [RoleController::class, 'destroy']);
     Route::get('/permissions', [RoleController::class, 'permissions']);
     Route::post('/roles/{id}/permissions', [RoleController::class, 'updatePermissions']);
 
     // Core REST Resource Controllers
+    Route::get('/projects/options', [ProjectController::class, 'options']);
+    Route::get('/users/options', [UserController::class, 'options']);
     Route::apiResource('projects', ProjectController::class);
     Route::apiResource('clients', ClientController::class);
     Route::apiResource('expenses', ExpenseController::class);

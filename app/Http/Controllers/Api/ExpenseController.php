@@ -63,8 +63,22 @@ class ExpenseController extends Controller
     {
         Gate::authorize('create', Expense::class);
 
+        $data = $request->validated();
+        $user = $request->user();
+
+        // Enforce project assignment check
+        if ($user && $user->role && $user->role->slug !== 'administrator') {
+            $assignedCount = $user->assignedProjects()->count();
+            if ($assignedCount > 0 && !$user->assignedProjects()->where('projects.id', $data['project_id'])->exists()) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'You are not authorized to log expenses for this project.'
+                ], 403);
+            }
+        }
+
         $expense = $this->expenseService->createExpense(
-            $request->validated(),
+            $data,
             $request->file('attachment')
         );
 
@@ -88,6 +102,19 @@ class ExpenseController extends Controller
 
     public function update(ExpenseRequest $request, int $id): JsonResponse
     {
+        $data = $request->validated();
+        $user = $request->user();
+
+        if (isset($data['project_id']) && $user && $user->role && $user->role->slug !== 'administrator') {
+            $assignedCount = $user->assignedProjects()->count();
+            if ($assignedCount > 0 && !$user->assignedProjects()->where('projects.id', $data['project_id'])->exists()) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'You are not authorized to assign expenses to this project.'
+                ], 403);
+            }
+        }
+
         $expense = $this->expenseRepo->findOrFail($id);
         Gate::authorize('update', $expense);
 

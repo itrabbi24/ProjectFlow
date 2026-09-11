@@ -53,7 +53,40 @@ class ProjectController extends Controller
             $query->where('client_id', $request->input('client_id'));
         }
 
-        $projects = $query->latest()->paginate(15);
+        $perPage = (int) $request->input('per_page', 15);
+        $projects = $query->latest()->paginate($perPage);
+
+        return response()->json([
+            'status' => 'success',
+            'data' => $projects
+        ]);
+    }
+
+    public function options(Request $request): JsonResponse
+    {
+        $user = $request->user();
+        $query = Project::query();
+
+        // Administrator sees all projects.
+        // For other users: if they have specific assigned projects, limit to those.
+        // If they are a project manager without specific assigned projects, limit to projects they manage.
+        if ($user && $user->role && $user->role->slug !== 'administrator') {
+            $assignedCount = $user->assignedProjects()->count();
+            if ($assignedCount > 0) {
+                $query->whereHas('assignedUsers', function($q) use ($user) {
+                    $q->where('users.id', $user->id);
+                });
+            } elseif ($user->role->slug === 'project_manager') {
+                $query->where(function($q) use ($user) {
+                    $q->where('manager_id', $user->id)
+                      ->orWhereNull('manager_id');
+                });
+            }
+        }
+
+        $projects = $query->select('id', 'name', 'code', 'client_id', 'manager_id', 'status')
+            ->orderBy('name')
+            ->get();
 
         return response()->json([
             'status' => 'success',

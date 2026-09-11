@@ -7,14 +7,24 @@
         <p class="text-xs text-slate-500 mt-1">Configure user profiles, assign roles, toggle statuses and audit last login dates.</p>
       </div>
 
-      <button
-        v-if="activeTab === 'users' && authStore.hasPermission('create_users')"
-        @click="openCreateDrawer"
-        class="flex items-center space-x-1.5 px-3.5 py-2 rounded-lg text-xs font-semibold bg-indigo-600 text-white hover:bg-indigo-700 transition shadow-sm cursor-pointer"
-      >
-        <Plus class="w-4 h-4" />
-        <span>Add User</span>
-      </button>
+      <div class="flex items-center space-x-2">
+        <button
+          v-if="activeTab === 'users' && authStore.hasPermission('create_users')"
+          @click="openCreateDrawer"
+          class="flex items-center space-x-1.5 px-3.5 py-2 rounded-lg text-xs font-semibold bg-indigo-600 text-white hover:bg-indigo-700 transition shadow-sm cursor-pointer"
+        >
+          <Plus class="w-4 h-4" />
+          <span>Add User</span>
+        </button>
+        <button
+          v-if="activeTab === 'roles' && authStore.hasPermission('assign_roles')"
+          @click="openCreateRoleDrawer"
+          class="flex items-center space-x-1.5 px-3.5 py-2 rounded-lg text-xs font-semibold bg-indigo-600 text-white hover:bg-indigo-700 transition shadow-sm cursor-pointer"
+        >
+          <Plus class="w-4 h-4" />
+          <span>Create Role</span>
+        </button>
+      </div>
     </div>
 
     <!-- Tabs -->
@@ -69,6 +79,7 @@
               <th class="p-4">Username</th>
               <th class="p-4">Email</th>
               <th class="p-4">Role</th>
+              <th class="p-4">Assigned Projects</th>
               <th class="p-4">Status</th>
               <th class="p-4">Last Login</th>
               <th class="p-4 text-center sticky right-0 bg-white shadow-[-8px_0_12px_-4px_rgba(0,0,0,0.02)]">Actions</th>
@@ -103,6 +114,23 @@
               <td class="p-4 font-mono font-medium text-slate-500">{{ user.username }}</td>
               <td class="p-4 text-slate-600">{{ user.email }}</td>
               <td class="p-4"><span class="px-2 py-0.5 rounded text-[10px] bg-slate-100 text-slate-700">{{ user.role?.name }}</span></td>
+              <td class="p-4">
+                <div v-if="user.role?.slug === 'administrator'" class="text-[11px] text-indigo-600 font-medium">
+                  All Projects (Admin)
+                </div>
+                <div v-else-if="user.assigned_projects && user.assigned_projects.length > 0" class="flex flex-wrap gap-1 max-w-xs">
+                  <span
+                    v-for="p in user.assigned_projects"
+                    :key="p.id"
+                    class="inline-block px-1.5 py-0.5 rounded text-[10px] bg-indigo-50 text-indigo-700 font-medium border border-indigo-100"
+                  >
+                    {{ p.name }}
+                  </span>
+                </div>
+                <span v-else class="text-[11px] text-slate-400">
+                  {{ user.role?.slug === 'project_manager' ? 'All Managed Projects' : 'None Assigned' }}
+                </span>
+              </td>
               <td class="p-4">
                 <span 
                   :class="[
@@ -185,14 +213,24 @@
             </td>
             <td class="p-4 text-slate-500">{{ role.permissions?.length || 0 }} permission(s)</td>
             <td class="p-4 text-center">
-              <button
-                v-if="role.slug !== 'administrator'"
-                @click="openPermissionsDrawer(role)"
-                class="px-3 py-1.5 rounded-lg text-[11px] font-semibold border border-slate-200 text-slate-600 hover:bg-slate-50 transition cursor-pointer"
-              >
-                Manage Menu Access
-              </button>
-              <span v-else class="text-[11px] text-slate-300">—</span>
+              <div class="flex items-center justify-center space-x-2">
+                <button
+                  v-if="role.slug !== 'administrator'"
+                  @click="openPermissionsDrawer(role)"
+                  class="px-3 py-1.5 rounded-lg text-[11px] font-semibold border border-slate-200 text-slate-600 hover:bg-slate-50 transition cursor-pointer"
+                >
+                  Manage Menu Access
+                </button>
+                <button
+                  v-if="!['administrator', 'project_manager'].includes(role.slug) && authStore.hasPermission('assign_roles')"
+                  @click="handleDeleteRole(role)"
+                  class="p-1.5 rounded-lg text-slate-400 hover:text-rose-500 hover:bg-rose-50 transition cursor-pointer"
+                  title="Delete Custom Role"
+                >
+                  <Trash2 class="w-4 h-4" />
+                </button>
+                <span v-if="role.slug === 'administrator'" class="text-[11px] text-slate-300">—</span>
+              </div>
             </td>
           </tr>
         </tbody>
@@ -246,6 +284,78 @@
           </button>
         </div>
       </template>
+    </Drawer>
+
+    <!-- Create Role Drawer -->
+    <Drawer
+      :is-open="createRoleDrawerOpen"
+      title="Create New Role"
+      subtitle="Define custom access tier and assign menu permissions."
+      @close="createRoleDrawerOpen = false"
+    >
+      <form @submit.prevent="saveNewRole" class="space-y-4">
+        <div>
+          <label class="block text-xs font-semibold text-slate-700">Role Name</label>
+          <input
+            type="text"
+            required
+            v-model="newRoleForm.name"
+            placeholder="e.g. Account Auditor, Site Supervisor"
+            class="mt-1 block w-full px-3 py-2 border border-slate-200 rounded-lg text-sm bg-transparent text-slate-800 focus:outline-none focus:border-indigo-500"
+          />
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-slate-700">Description (Optional)</label>
+          <textarea
+            rows="2"
+            v-model="newRoleForm.description"
+            placeholder="Brief explanation of this role's scope..."
+            class="mt-1 block w-full px-3 py-2 border border-slate-200 rounded-lg text-sm bg-transparent text-slate-800 focus:outline-none focus:border-indigo-500"
+          ></textarea>
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 mb-2">Initial Permissions</label>
+          <div class="space-y-4 max-h-72 overflow-y-auto border border-slate-100 rounded-xl p-3 bg-slate-50/50">
+            <div v-for="(perms, category) in permissionsByCategory" :key="category">
+              <h4 class="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">{{ category }}</h4>
+              <div class="space-y-1">
+                <label
+                  v-for="perm in perms"
+                  :key="perm.id"
+                  class="flex items-center space-x-2 px-2 py-1 rounded hover:bg-white cursor-pointer"
+                >
+                  <input
+                    type="checkbox"
+                    :value="perm.id"
+                    v-model="newRoleForm.permissions"
+                    class="w-3.5 h-3.5 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
+                  />
+                  <span class="text-xs text-slate-700">{{ perm.name }}</span>
+                </label>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="pt-4 flex justify-end space-x-2 border-t border-slate-100">
+          <button
+            type="button"
+            @click="createRoleDrawerOpen = false"
+            class="px-4 py-2 border border-slate-200 rounded-lg text-xs font-semibold text-slate-700 hover:bg-slate-50 cursor-pointer"
+          >
+            Cancel
+          </button>
+          <button
+            type="submit"
+            :disabled="savingRole"
+            class="px-4 py-2 bg-indigo-600 text-white rounded-lg text-xs font-semibold hover:bg-indigo-700 transition disabled:opacity-50 cursor-pointer"
+          >
+            {{ savingRole ? 'Creating...' : 'Create Role' }}
+          </button>
+        </div>
+      </form>
     </Drawer>
 
     <!-- User account Form Drawer -->
@@ -328,6 +438,35 @@
             <option value="inactive">Inactive</option>
           </select>
         </div>
+
+        <!-- Accessible Projects (Income & Expense Entry) -->
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 mb-1">
+            Allowed Projects for Income &amp; Expense
+          </label>
+          <p class="text-[11px] text-slate-500 mb-2">
+            Select the specific projects this user is allowed to log income and expenses for. If none are selected, administrators have global access and project managers can log for all their managed projects.
+          </p>
+          <div class="space-y-1 max-h-48 overflow-y-auto border border-slate-200 rounded-xl p-3 bg-slate-50/50">
+            <label
+              v-for="proj in allProjects"
+              :key="proj.id"
+              class="flex items-center space-x-2.5 px-2 py-1.5 rounded-lg hover:bg-white cursor-pointer"
+            >
+              <input
+                type="checkbox"
+                :value="proj.id"
+                v-model="form.project_ids"
+                class="w-4 h-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
+              />
+              <span class="text-xs text-slate-800 font-medium">{{ proj.name }}</span>
+              <span class="text-[10px] text-slate-400 font-mono">({{ proj.code }})</span>
+            </label>
+            <p v-if="allProjects.length === 0" class="text-xs text-slate-400 text-center py-2">
+              No projects created yet.
+            </p>
+          </div>
+        </div>
       </form>
 
       <!-- Footer Buttons -->
@@ -371,6 +510,7 @@ const saving = ref(false);
 const usersList = ref([]);
 const usersData = ref({});
 const rolesList = ref([]);
+const allProjects = ref([]);
 
 // Roles & Permissions tab
 const activeTab = ref('users');
@@ -380,6 +520,14 @@ const permissionsDrawerOpen = ref(false);
 const editingRole = ref(null);
 const selectedPermissionIds = ref([]);
 const savingPermissions = ref(false);
+
+const createRoleDrawerOpen = ref(false);
+const savingRole = ref(false);
+const newRoleForm = reactive({
+  name: '',
+  description: '',
+  permissions: []
+});
 
 const filters = reactive({
   search: '',
@@ -397,7 +545,8 @@ const form = reactive({
   email: '',
   password: '',
   role_id: '',
-  status: 'active'
+  status: 'active',
+  project_ids: []
 });
 
 async function fetchUsers() {
@@ -474,6 +623,59 @@ async function savePermissions() {
   }
 }
 
+async function openCreateRoleDrawer() {
+  newRoleForm.name = '';
+  newRoleForm.description = '';
+  newRoleForm.permissions = [];
+  createRoleDrawerOpen.value = true;
+
+  if (Object.keys(permissionsByCategory.value).length === 0) {
+    try {
+      const response = await axios.get('/permissions');
+      permissionsByCategory.value = response.data.data || {};
+    } catch (e) {
+      console.error(e);
+      toast.error('Failed to load permission list.');
+    }
+  }
+}
+
+async function saveNewRole() {
+  savingRole.value = true;
+  try {
+    await axios.post('/roles', newRoleForm);
+    toast.success('Role created successfully.');
+    createRoleDrawerOpen.value = false;
+    fetchRoles();
+  } catch (error) {
+    console.error(error);
+    toast.error(error.response?.data?.message || 'Failed to create role.');
+  } finally {
+    savingRole.value = false;
+  }
+}
+
+async function handleDeleteRole(role) {
+  const result = await Swal.fire({
+    title: `Delete '${role.name}' role?`,
+    text: "This will remove the custom role. Users assigned to this role must be reassigned first.",
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonText: 'Yes, delete role'
+  });
+
+  if (result.isConfirmed) {
+    try {
+      await axios.delete(`/roles/${role.id}`);
+      toast.success('Role deleted successfully.');
+      fetchRoles();
+    } catch (error) {
+      console.error(error);
+      toast.error(error.response?.data?.message || 'Failed to delete role.');
+    }
+  }
+}
+
 let debounceTimer = null;
 function debouncedSearch() {
   if (debounceTimer) clearTimeout(debounceTimer);
@@ -488,6 +690,15 @@ function changePage(page) {
   fetchUsers();
 }
 
+async function fetchAllProjects() {
+  try {
+    const res = await axios.get('/projects?per_page=200');
+    allProjects.value = res.data.data.data || res.data.data || [];
+  } catch (e) {
+    console.error('Failed to load project list for user assignment:', e);
+  }
+}
+
 function openCreateDrawer() {
   isEditing.value = false;
   editingId.value = null;
@@ -497,6 +708,7 @@ function openCreateDrawer() {
   form.password = '';
   form.role_id = '';
   form.status = 'active';
+  form.project_ids = [];
   drawerOpen.value = true;
 }
 
@@ -509,6 +721,7 @@ function openEditDrawer(user) {
   form.password = ''; // Keep blank
   form.role_id = user.role_id;
   form.status = user.status;
+  form.project_ids = (user.assigned_projects || []).map(p => p.id);
   drawerOpen.value = true;
 }
 
@@ -566,5 +779,6 @@ function formatTime(dateStr) {
 onMounted(() => {
   fetchUsers();
   fetchRoles();
+  fetchAllProjects();
 });
 </script>

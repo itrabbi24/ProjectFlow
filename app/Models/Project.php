@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 
 #[Fillable([
@@ -27,6 +28,16 @@ class Project extends Model
             'estimated_profit' => 'decimal:2',
             'progress' => 'integer',
         ];
+    }
+
+    public function setStartDateAttribute($value): void
+    {
+        $this->attributes['start_date'] = $value ? \Carbon\Carbon::parse($value)->format('Y-m-d') : null;
+    }
+
+    public function setEndDateAttribute($value): void
+    {
+        $this->attributes['end_date'] = $value ? \Carbon\Carbon::parse($value)->format('Y-m-d') : null;
     }
 
     public function client(): BelongsTo
@@ -52,5 +63,10 @@ class Project extends Model
     public function incomes(): HasMany
     {
         return $this->hasMany(Income::class);
+    }
+
+    public function assignedUsers(): BelongsToMany
+    {
+        return $this->belongsToMany(User::class, 'project_user')->withTimestamps();
     }
 }

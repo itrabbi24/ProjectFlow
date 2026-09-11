@@ -11,6 +11,27 @@ class StoreProjectRequest extends FormRequest
         return true;
     }
 
+    protected function prepareForValidation(): void
+    {
+        $merge = [];
+        if ($this->filled('start_date')) {
+            try {
+                $merge['start_date'] = \Carbon\Carbon::parse($this->input('start_date'))->format('Y-m-d');
+            } catch (\Throwable $e) {
+            }
+        }
+        if ($this->filled('end_date')) {
+            try {
+                $merge['end_date'] = \Carbon\Carbon::parse($this->input('end_date'))->format('Y-m-d');
+            } catch (\Throwable $e) {
+            }
+        }
+
+        if (!empty($merge)) {
+            $this->merge($merge);
+        }
+    }
+
     public function rules(): array
     {
         return [

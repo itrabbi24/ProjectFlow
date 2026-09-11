@@ -11,6 +11,18 @@ class ExpenseRequest extends FormRequest
         return true;
     }
 
+    protected function prepareForValidation(): void
+    {
+        if ($this->filled('expense_date')) {
+            try {
+                $this->merge([
+                    'expense_date' => \Carbon\Carbon::parse($this->input('expense_date'))->format('Y-m-d')
+                ]);
+            } catch (\Throwable $e) {
+            }
+        }
+    }
+
     public function rules(): array
     {
         $isPost = $this->isMethod('post');

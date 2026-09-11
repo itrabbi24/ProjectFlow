@@ -20,6 +20,14 @@ const props = defineProps({
   placeholder: {
     type: String,
     default: 'Select Date'
+  },
+  dateFormat: {
+    type: String,
+    default: 'Y-m-d'
+  },
+  altFormat: {
+    type: String,
+    default: 'd-M-Y'
   }
 });
 
@@ -29,7 +37,9 @@ let fp = null;
 
 onMounted(() => {
   fp = flatpickr(input.value, {
-    dateFormat: "d-M-Y",
+    dateFormat: props.dateFormat,
+    altInput: true,
+    altFormat: props.altFormat,
     defaultDate: props.modelValue,
     onChange: (selectedDates, dateStr) => {
       emit('update:modelValue', dateStr);
@@ -38,7 +48,7 @@ onMounted(() => {
 });
 
 watch(() => props.modelValue, (newVal) => {
-  if (fp && newVal !== input.value.value) {
+  if (fp && newVal !== input.value?.value) {
     fp.setDate(newVal, false);
   }
 });

@@ -100,10 +100,10 @@
           </form>
 
           <!-- Quick access hint for testing -->
-          <div class="mt-6 border-t border-slate-100 pt-4 text-center">
+          <!-- <div class="mt-6 border-t border-slate-100 pt-4 text-center">
             <p class="text-[10px] text-slate-400">Quick Access (Admin seeder):</p>
             <p class="text-[10px] font-mono text-slate-500 mt-1">Username: <span class="font-bold text-indigo-500">admin</span> / Password: <span class="font-bold text-indigo-500">password</span></p>
-          </div>
+          </div> -->
         </div>
       </div>
     </div>

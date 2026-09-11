@@ -52,4 +52,70 @@ class RoleController extends Controller
             'data' => $role->load('permissions')
         ]);
     }
+
+    public function store(Request $request): JsonResponse
+    {
+        Gate::authorize('assign_roles');
+
+        $validated = $request->validate([
+            'name' => 'required|string|max:100|unique:roles,name',
+            'description' => 'nullable|string|max:255',
+            'permissions' => 'nullable|array',
+            'permissions.*' => 'exists:permissions,id'
+        ]);
+
+        $slug = \Illuminate\Support\Str::slug($validated['name'], '_');
+        // Ensure unique slug
+        $baseSlug = $slug;
+        $counter = 1;
+        while (Role::where('slug', $slug)->exists()) {
+            $slug = "{$baseSlug}_{$counter}";
+            $counter++;
+        }
+
+        $role = Role::create([
+            'name' => $validated['name'],
+            'slug' => $slug,
+            'description' => $validated['description'] ?? null,
+        ]);
+
+        if (!empty($validated['permissions'])) {
+            $role->permissions()->sync($validated['permissions']);
+        }
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Role created successfully',
+            'data' => $role->load('permissions')
+        ], 201);
+    }
+
+    public function destroy(int $id): JsonResponse
+    {
+        Gate::authorize('assign_roles');
+
+        $role = Role::withCount('users')->findOrFail($id);
+
+        if (in_array($role->slug, ['administrator', 'project_manager'])) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'System default roles cannot be deleted.'
+            ], 422);
+        }
+
+        if ($role->users_count > 0) {
+            return response()->json([
+                'status' => 'error',
+                'message' => "Cannot delete role because it is assigned to {$role->users_count} user(s)."
+            ], 422);
+        }
+
+        $role->permissions()->detach();
+        $role->delete();
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Role deleted successfully.'
+        ]);
+    }
 }

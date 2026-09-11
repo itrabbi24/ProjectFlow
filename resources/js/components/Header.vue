@@ -95,6 +95,14 @@
             <p class="text-xs font-semibold text-slate-800 truncate">{{ authStore.user?.name }}</p>
             <p class="text-[10px] text-slate-400 truncate">{{ authStore.user?.email }}</p>
           </div>
+          <button 
+            type="button"
+            @click="showProfile = false; showChangePasswordModal = true"
+            class="flex items-center space-x-2 w-full text-left px-4 py-2 text-xs text-slate-600 hover:bg-slate-50 hover:text-slate-900"
+          >
+            <KeyRound class="w-4 h-4" />
+            <span>Change Password</span>
+          </button>
           <router-link 
             to="/settings" 
             @click="showProfile = false"
@@ -113,6 +121,12 @@
         </div>
       </div>
     </div>
+
+    <!-- Universal Change Password Modal -->
+    <ChangePasswordModal 
+      :is-open="showChangePasswordModal" 
+      @close="showChangePasswordModal = false" 
+    />
   </header>
 </template>
 
@@ -126,8 +140,10 @@ import {
   Bell, 
   ChevronDown, 
   User, 
+  KeyRound,
   LogOut 
 } from 'lucide-vue-next';
+import ChangePasswordModal from '@/components/ChangePasswordModal.vue';
 import axios from 'axios';
 import { formatDateTime } from '@/utils/date';
 
@@ -139,6 +155,7 @@ const router = useRouter();
 
 const showNotifications = ref(false);
 const showProfile = ref(false);
+const showChangePasswordModal = ref(false);
 
 const unreadCount = ref(0);
 const recentActivities = ref([]);
